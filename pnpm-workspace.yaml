@@ -1,7 +1,3 @@
-packages:
-  - '.'
-
 onlyBuiltDependencies:
   - esbuild
-  - sharp
-  - workerd
+  - '@tailwindcss/oxide'

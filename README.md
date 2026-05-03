@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-pnpm dlx sv@0.15.2 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:forms,typography" sveltekit-adapter="adapter:static" mdsvex --install pnpm .
+pnpm dlx sv@0.15.2 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:typography,forms" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" mdsvex --install pnpm .
 ```
 
 ## Developing
