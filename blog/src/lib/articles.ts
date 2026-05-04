@@ -17,9 +17,11 @@ type ArticleModule = {
 	metadata?: Partial<ArticleSummary>;
 };
 
-type ArticleRecord = ArticleSummary & {
+type ArticleRecord = Omit<ArticleSummary, 'coverAlt' | 'coverTone'> & {
 	publishedAt: string;
 	component: Component;
+	coverAlt: string;
+	coverTone: string;
 };
 
 const articleModules = import.meta.glob('./content/articles/*.{md,svx}', {

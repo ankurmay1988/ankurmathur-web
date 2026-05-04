@@ -9,7 +9,7 @@ import { createHighlighter } from 'shiki';
 
 const highlighter = await createHighlighter({
 	themes: ['github-light', 'github-dark'],
-	langs: ['typescript', 'javascript', 'css', 'html', 'svelte', 'bash', 'json', 'markdown']
+	langs: ['typescript', 'javascript', 'css', 'html', 'svelte', 'bash', 'json', 'markdown', 'csharp', 'sql', 'yaml']
 });
 
 /** @type {import('@sveltejs/kit').Config} */

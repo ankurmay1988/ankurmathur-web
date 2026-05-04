@@ -1,0 +1,529 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Event Sourcing in .NET with Marten and PostgreSQL',
+    excerpt:
+      'Most databases remember the present. Event Sourcing remembers everything. Here is how to build a fully auditable system in .NET using Marten and PostgreSQL.',
+    published: '2026-05-05',
+    readingTime: '10 min read',
+    category: 'Backend',
+    featured: true,
+    coverAlt: 'A stack of ledger books with a PostgreSQL elephant logo watermark',
+    coverTone: 'indigo'
+  };
+</script>
+
+Most databases are amnesiac by design. You write a row, you update it, the old value disappears. That trade-off is fine for a lot of software. But the moment a business asks "what did this look like three days ago?" or "who changed this and when?", the standard CRUD model has nothing to offer.
+
+Event Sourcing is the pattern that fixes this. Instead of storing the current state of an entity, you store the sequence of events that caused it to reach that state. The current state is always derived — never directly written.
+
+In this post we will build a **support ticket system** in .NET. It is a domain that maps cleanly onto Event Sourcing: tickets have a well-defined lifecycle, every status change matters, and the audit trail is a first-class requirement. We will use [Marten](https://martendb.io/) as our event store and document database, backed by PostgreSQL.
+
+## What We Are Building
+
+The support ticket API supports the following operations:
+
+**Commands (write side)**
+- Open a new ticket
+- Assign it to an agent
+- Add a comment
+- Escalate the ticket
+- Resolve it
+- Close it
+
+**Queries (read side)**
+- Get full ticket details with history (inline projection)
+- Get agent workload — how many open tickets each agent has (async cross-stream projection)
+
+**Domain events**
+- `TicketOpened`
+- `TicketAssigned`
+- `CommentAdded`
+- `TicketEscalated`
+- `TicketResolved`
+- `TicketClosed`
+
+## Core Concepts Before the Code
+
+A few terms come up constantly in Event Sourcing. Worth pinning these down before we write a single line.
+
+**Events** are immutable facts. `TicketOpened` happened. You cannot un-happen it, and you cannot change it after the fact. Events use past tense names because they describe history, not intent.
+
+**Streams** are ordered, append-only sequences of events for a single entity. Every support ticket owns one stream, identified by a GUID. All events for ticket `f3a1...` are stored together in the order they occurred.
+
+**Aggregates** are domain objects that replay a stream to rebuild their current state. The `SupportTicket` aggregate starts blank and applies each event one by one. By the time it has applied all six events above, it knows the current assignee, status, comment count, and anything else it tracks.
+
+**Projections** are read models built from events. An aggregate gives you the state of one stream. A projection can build an optimized query view from one stream, or aggregate data across many streams simultaneously.
+
+## Setting Up Marten
+
+Install the package:
+
+```bash
+dotnet add package Marten
+```
+
+Wire it up in `Program.cs`:
+
+```csharp
+builder.Services.AddMarten(options =>
+{
+    options.Connection(connectionString);
+    options.DatabaseSchemaName = "support";
+
+    // Inline: immediately consistent, lives in the same transaction as the event append
+    options.Projections.Add<TicketSummaryProjection>(ProjectionLifecycle.Inline);
+
+    // Async: eventually consistent, runs in a background daemon
+    options.Projections.Add<AgentWorkloadProjection>(ProjectionLifecycle.Async);
+})
+.AddAsyncDaemon(DaemonMode.Solo);
+```
+
+Two things to note here.
+
+`ProjectionLifecycle.Inline` means the projection document is updated in the same database transaction as the event. When `SaveChangesAsync` returns, the read model is already up to date. Use this for projections that callers query immediately after writing.
+
+`ProjectionLifecycle.Async` means a background daemon picks up new events and updates the projection after the fact. There is a small delay, but this mode is far more suitable for cross-stream projections that might fan out across thousands of streams.
+
+`DaemonMode.Solo` is correct for a single-instance deployment. Switch to `HotCold` if you run multiple replicas.
+
+Marten creates all the tables it needs on startup. No migration files to manage.
+
+## Defining Domain Events
+
+Events are records in C#. Records are immutable by default, which is exactly what we want — an event should be impossible to modify after it is created.
+
+```csharp
+public sealed record TicketOpened(
+    Guid CustomerId,
+    string Title,
+    string Description,
+    TicketPriority Priority);
+
+public sealed record TicketAssigned(Guid AgentId, string AgentName);
+
+public sealed record CommentAdded(Guid AuthorId, string AuthorName, string Body);
+
+public sealed record TicketEscalated(TicketPriority NewPriority, string Reason);
+
+public sealed record TicketResolved(Guid ResolvedById, string ResolutionNotes);
+
+public sealed record TicketClosed(Guid ClosedById);
+```
+
+A few design decisions worth noting:
+
+`TicketOpened` captures the priority at the time of creation. If the priority scale changes later, historical events still reflect the original intent.
+
+`CommentAdded` stores `AuthorName` directly. This is intentional — user display names can change, but the comment should always show who wrote it when they wrote it. Events capture a snapshot of the facts at the moment they occur.
+
+`TicketEscalated` carries `Reason` as a string rather than an enum. Escalation reasons are narrative; constraining them to a fixed set would lose information.
+
+`TicketClosed` has no payload beyond who closed it. The fact of closure is the information.
+
+## Building the Aggregate
+
+The aggregate derives its state by replaying events through `Apply` methods. Marten discovers these methods by convention — no base class required.
+
+```csharp
+public enum TicketStatus { Open, Assigned, Escalated, Resolved, Closed }
+
+public sealed class SupportTicket
+{
+    public Guid Id { get; set; }
+    public Guid CustomerId { get; private set; }
+    public string Title { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
+    public TicketPriority Priority { get; private set; }
+    public TicketStatus Status { get; private set; }
+    public Guid? AssignedAgentId { get; private set; }
+    public int CommentCount { get; private set; }
+
+    public void Apply(TicketOpened e)
+    {
+        CustomerId = e.CustomerId;
+        Title = e.Title;
+        Description = e.Description;
+        Priority = e.Priority;
+        Status = TicketStatus.Open;
+    }
+
+    public void Apply(TicketAssigned e)
+    {
+        AssignedAgentId = e.AgentId;
+        Status = TicketStatus.Assigned;
+    }
+
+    public void Apply(CommentAdded _)
+    {
+        CommentCount++;
+    }
+
+    public void Apply(TicketEscalated e)
+    {
+        Priority = e.NewPriority;
+        Status = TicketStatus.Escalated;
+    }
+
+    public void Apply(TicketResolved _)
+    {
+        Status = TicketStatus.Resolved;
+    }
+
+    public void Apply(TicketClosed _)
+    {
+        Status = TicketStatus.Closed;
+        AssignedAgentId = null;
+    }
+}
+```
+
+The `Id` property has a public setter because Marten sets it when loading the aggregate from the stream. Everything else is `private set` — state may only change via `Apply` methods.
+
+Notice that `Apply` methods do no validation. They are pure state transitions. The decision about whether a state transition is allowed lives in the command handler, not in the aggregate. This keeps the aggregate focused on one job: knowing what state it is in.
+
+## Writing Commands
+
+Every command follows the same four-step pattern:
+
+1. Load the aggregate by replaying its stream
+2. Validate business rules against the current state
+3. Append the new event
+4. Save — Marten persists the event and updates inline projections in one transaction
+
+### Opening a Ticket
+
+```csharp
+internal sealed class OpenTicketHandler(IDocumentSession session) : IOpenTicketHandler
+{
+    public async Task<ErrorOr<OpenTicketResponse>> HandleAsync(
+        OpenTicketRequest request,
+        CancellationToken ct)
+    {
+        var ticketId = Guid.NewGuid();
+        var @event = new TicketOpened(
+            request.CustomerId,
+            request.Title,
+            request.Description,
+            request.Priority);
+
+        session.Events.StartStream<SupportTicket>(ticketId, @event);
+        await session.SaveChangesAsync(ct);
+
+        return new OpenTicketResponse(ticketId);
+    }
+}
+```
+
+`StartStream` creates a new stream and throws if one with the same ID already exists. This is stronger than `Append` — it gives you natural idempotency protection against duplicate create requests.
+
+### Assigning a Ticket
+
+```csharp
+internal sealed class AssignTicketHandler(IDocumentSession session) : IAssignTicketHandler
+{
+    public async Task<ErrorOr<TicketResponse>> HandleAsync(
+        Guid ticketId,
+        AssignTicketRequest request,
+        CancellationToken ct)
+    {
+        var ticket = await session.Events
+            .AggregateStreamAsync<SupportTicket>(ticketId, token: ct);
+
+        if (ticket is null)
+            return Error.NotFound("Ticket.NotFound", "Ticket not found");
+
+        if (ticket.Status is TicketStatus.Resolved or TicketStatus.Closed)
+            return Error.Validation("Ticket.Inactive", "Cannot assign a resolved or closed ticket");
+
+        var @event = new TicketAssigned(request.AgentId, request.AgentName);
+        session.Events.Append(ticketId, @event);
+        await session.SaveChangesAsync(ct);
+
+        ticket = await session.Events
+            .AggregateStreamAsync<SupportTicket>(ticketId, token: ct);
+
+        return ticket!.MapToResponse();
+    }
+}
+```
+
+`AggregateStreamAsync` reads the full event stream for this ticket and replays all events through the `Apply` methods to give us the current state. This is how we validate business rules: we need to know the current `Status` before deciding whether the assignment is allowed.
+
+After saving, we re-aggregate to return the fresh state in the response. For commands where you do not need to return the updated aggregate, you can skip that last step.
+
+### Adding a Comment
+
+Comments can be added to any ticket that is not closed:
+
+```csharp
+internal sealed class AddCommentHandler(IDocumentSession session) : IAddCommentHandler
+{
+    public async Task<ErrorOr<TicketResponse>> HandleAsync(
+        Guid ticketId,
+        AddCommentRequest request,
+        CancellationToken ct)
+    {
+        var ticket = await session.Events
+            .AggregateStreamAsync<SupportTicket>(ticketId, token: ct);
+
+        if (ticket is null)
+            return Error.NotFound("Ticket.NotFound", "Ticket not found");
+
+        if (ticket.Status is TicketStatus.Closed)
+            return Error.Validation("Ticket.Closed", "Cannot comment on a closed ticket");
+
+        var @event = new CommentAdded(request.AuthorId, request.AuthorName, request.Body);
+        session.Events.Append(ticketId, @event);
+        await session.SaveChangesAsync(ct);
+
+        ticket = await session.Events.AggregateStreamAsync<SupportTicket>(ticketId, token: ct);
+        return ticket!.MapToResponse();
+    }
+}
+```
+
+The `Escalate`, `Resolve`, and `Close` handlers follow the same structure — load, validate the status transition, append, save. For example, you can only resolve an `Assigned` or `Escalated` ticket, and you can only close a `Resolved` one. These rules live in the handlers and are checked against the current aggregate state before any event is appended.
+
+## Building Read Models with Projections
+
+Querying the event stream directly is expensive for reads — you would have to replay potentially hundreds of events every time a user loads a ticket page. Projections solve this by building and maintaining pre-computed read models.
+
+### Inline Projection: TicketSummary
+
+The `TicketSummary` projection builds a denormalized document for each ticket. Because it is inline, it updates in the same transaction as the event append — the read model is always consistent.
+
+First, the document:
+
+```csharp
+public sealed class TicketSummary
+{
+    public Guid Id { get; set; }
+    public Guid CustomerId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public TicketPriority Priority { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? AssignedAgentName { get; set; }
+    public int CommentCount { get; set; }
+    public List<TicketComment> Comments { get; set; } = [];
+    public DateTimeOffset OpenedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed record TicketComment(string AuthorName, string Body, DateTimeOffset PostedAt);
+```
+
+This stores `AssignedAgentName` directly. We trade a tiny bit of storage for zero-join queries — loading a ticket never needs to touch a users table.
+
+Now the projection:
+
+```csharp
+public sealed class TicketSummaryProjection : SingleStreamProjection<TicketSummary, Guid>
+{
+    public TicketSummary Create(IEvent<TicketOpened> e)
+    {
+        return new TicketSummary
+        {
+            CustomerId = e.Data.CustomerId,
+            Title = e.Data.Title,
+            Description = e.Data.Description,
+            Priority = e.Data.Priority,
+            Status = TicketStatus.Open.ToString(),
+            OpenedAt = e.Timestamp,
+            UpdatedAt = e.Timestamp
+        };
+    }
+
+    public void Apply(TicketSummary summary, IEvent<TicketAssigned> e)
+    {
+        summary.AssignedAgentName = e.Data.AgentName;
+        summary.Status = TicketStatus.Assigned.ToString();
+        summary.UpdatedAt = e.Timestamp;
+    }
+
+    public void Apply(TicketSummary summary, IEvent<CommentAdded> e)
+    {
+        summary.Comments.Add(new TicketComment(e.Data.AuthorName, e.Data.Body, e.Timestamp));
+        summary.CommentCount = summary.Comments.Count;
+        summary.UpdatedAt = e.Timestamp;
+    }
+
+    public void Apply(TicketSummary summary, IEvent<TicketEscalated> e)
+    {
+        summary.Priority = e.Data.NewPriority;
+        summary.Status = TicketStatus.Escalated.ToString();
+        summary.UpdatedAt = e.Timestamp;
+    }
+
+    public void Apply(TicketSummary summary, IEvent<TicketResolved> e)
+    {
+        summary.Status = TicketStatus.Resolved.ToString();
+        summary.UpdatedAt = e.Timestamp;
+    }
+
+    public void Apply(TicketSummary summary, IEvent<TicketClosed> e)
+    {
+        summary.AssignedAgentName = null;
+        summary.Status = TicketStatus.Closed.ToString();
+        summary.UpdatedAt = e.Timestamp;
+    }
+}
+```
+
+`SingleStreamProjection<TicketSummary, Guid>` tells Marten: one document per stream, key is a GUID. The `Create` method is called for the first event. Each `Apply` method handles subsequent events. The `IEvent<T>` wrapper exposes `Timestamp` and other event metadata alongside the payload.
+
+The `Comments` list is embedded directly in the document. For most support systems, a ticket has tens — not thousands — of comments, so embedding them is practical.
+
+### Async Projection: AgentWorkload
+
+This projection answers "how many open tickets does each agent currently have?" It is a cross-stream projection — it pulls `TicketAssigned` and `TicketClosed` events from every ticket stream and aggregates them into one document per agent.
+
+```csharp
+public sealed class AgentWorkload
+{
+    public Guid Id { get; set; }
+    public string AgentName { get; set; } = string.Empty;
+    public int OpenTicketCount { get; set; }
+    public DateTimeOffset LastUpdatedAt { get; set; }
+}
+
+public sealed class AgentWorkloadProjection : MultiStreamProjection<AgentWorkload, Guid>
+{
+    public AgentWorkloadProjection()
+    {
+        Identity<TicketAssigned>(e => e.AgentId);
+        Identity<TicketClosed>(e => e.AgentId); // see note below
+    }
+
+    public AgentWorkload Create(IEvent<TicketAssigned> e)
+    {
+        return new AgentWorkload
+        {
+            Id = e.Data.AgentId,
+            AgentName = e.Data.AgentName,
+            OpenTicketCount = 1,
+            LastUpdatedAt = e.Timestamp
+        };
+    }
+
+    public void Apply(AgentWorkload workload, IEvent<TicketAssigned> e)
+    {
+        workload.OpenTicketCount++;
+        workload.AgentName = e.Data.AgentName;
+        workload.LastUpdatedAt = e.Timestamp;
+    }
+
+    public void Apply(AgentWorkload workload, IEvent<TicketClosed> e)
+    {
+        workload.OpenTicketCount = Math.Max(0, workload.OpenTicketCount - 1);
+        workload.LastUpdatedAt = e.Timestamp;
+    }
+}
+```
+
+`Identity<T>` tells Marten how to route each event type to the right document. A `TicketAssigned` event routes to the `AgentWorkload` document for the assigned agent's ID. A `TicketClosed` event routes to the same document so the count can be decremented.
+
+> For `TicketClosed` to carry the agent ID in this projection, `TicketClosed` would need to include it, or Marten's grouping would need to use the stream's aggregate state. A common pattern for cross-stream projections is to include denormalized IDs on events that need to participate in fan-out projections.
+
+Because this projection is registered as `Async`, there is a small delay between a ticket being closed and the workload count reflecting it. For a dashboard that refreshes every few seconds, this eventual consistency is entirely acceptable.
+
+## The Query Side
+
+Queries read directly from projection documents. No event replaying. No joins.
+
+### Loading a Ticket
+
+```csharp
+internal sealed class GetTicketHandler(IQuerySession session) : IGetTicketHandler
+{
+    public async Task<ErrorOr<TicketSummaryResponse>> HandleAsync(
+        Guid ticketId,
+        CancellationToken ct)
+    {
+        var summary = await session.LoadAsync<TicketSummary>(ticketId, ct);
+
+        if (summary is null)
+            return Error.NotFound("Ticket.NotFound", "Ticket not found");
+
+        return summary.MapToResponse();
+    }
+}
+```
+
+`IQuerySession` is Marten's read-only session. It is lighter than `IDocumentSession` and makes the intent of query handlers explicit — they do not modify anything.
+
+`LoadAsync<TicketSummary>` is a key-value lookup on the projection document. It translates to a single `SELECT` by primary key. All the comments, agent name, and computed fields are already in the document.
+
+### Getting Agent Workload
+
+```csharp
+internal sealed class GetAgentWorkloadHandler(IQuerySession session) : IGetAgentWorkloadHandler
+{
+    public async Task<ErrorOr<List<AgentWorkloadResponse>>> HandleAsync(
+        int topN,
+        CancellationToken ct)
+    {
+        var limit = topN > 0 ? topN : 20;
+
+        var results = await session
+            .Query<AgentWorkload>()
+            .Where(x => x.OpenTicketCount > 0)
+            .OrderByDescending(x => x.OpenTicketCount)
+            .Take(limit)
+            .ToListAsync(ct);
+
+        return results
+            .Select(x => new AgentWorkloadResponse(x.Id, x.AgentName, x.OpenTicketCount))
+            .ToList();
+    }
+}
+```
+
+Marten translates `Query<AgentWorkload>()` LINQ chains into SQL against the `AgentWorkload` table. You get full LINQ query capabilities over the projection documents without writing raw SQL.
+
+## Time Travel: Replaying to a Point in Time
+
+One capability that comes for free with an event store is temporal queries. You can reconstruct the state of any ticket at any point in the past:
+
+```csharp
+// What did ticket f3a1... look like at 9:00 AM yesterday?
+var checkpoint = DateTimeOffset.UtcNow.AddDays(-1).Date.AddHours(9);
+
+var ticketAtCheckpoint = await session.Events
+    .AggregateStreamAsync<SupportTicket>(
+        ticketId,
+        timestamp: checkpoint,
+        token: ct);
+```
+
+The `timestamp` parameter tells Marten to only replay events that occurred before that point. The aggregate you get back reflects the ticket's exact state at that moment in history. No separate audit table. No soft deletes. The history is already there.
+
+## When Event Sourcing Is the Right Choice
+
+Event Sourcing adds complexity. It introduces new abstractions — streams, aggregates, projections — and the eventual consistency of async projections requires callers to think carefully about read guarantees. It is not the right choice for every domain.
+
+**It earns its keep when:**
+
+- **Audit trails are a hard requirement.** Compliance, financial, or healthcare systems where you need to know exactly who did what and when. The audit log is not a feature you bolt on — it is the data model.
+- **Your domain has rich state machines.** When an entity moves through several meaningful states with business rules governing each transition, those transitions become first-class events rather than status-column updates.
+- **Multiple consumers need different views.** If your analytics team, your ops dashboard, and your customer-facing API all need different shapes of the same data, projections let you build each view independently without changing the write side.
+- **You need temporal queries.** When "what did this look like last Tuesday?" is a real question users ask, Event Sourcing answers it for free.
+
+**It is probably overkill when:**
+
+- The domain is simple CRUD with no meaningful history requirements.
+- The team is unfamiliar with the pattern and the deadline is near.
+- A single entity receives extremely high-frequency writes and you have not planned for snapshotting (Marten supports this, but it requires explicit configuration).
+
+The pragmatic path is to apply Event Sourcing selectively. Use it for the bounded contexts in your system where history and state transitions genuinely matter — order processing, payment flows, support tickets — and keep CRUD for everything else. The two approaches coexist fine within the same application.
+
+## Summary
+
+The core idea of Event Sourcing is simple: store what happened, not just what is. The current state is always derivable from the history.
+
+With Marten, the mechanics are straightforward. Events are appended to streams. Aggregates replay streams to enforce business rules. Inline projections keep read models immediately consistent for common queries. Async projections handle cross-stream analytics with eventual consistency. PostgreSQL stores everything with no additional infrastructure.
+
+The support ticket domain maps this cleanly: every state transition is a named event, the full comment history is always available, agent workload updates automatically, and you can replay any ticket's history to any point in time without writing a single audit query.
+
+Start with one bounded context in your system where these properties matter. The investment in learning the pattern pays off quickly once the business starts asking the questions that CRUD cannot answer.
