@@ -458,7 +458,7 @@ img {
 	border-radius: calc(var(--radius) + 0.35rem);
 	max-width: 100%;
 	display: grid;
-	gap: 2rem;
+	gap: 1.4rem;
 }
 
 .back-link {
@@ -469,18 +469,24 @@ img {
 
 .article-header {
 	display: grid;
-	gap: 1rem;
-	padding-bottom: 1.35rem;
+	gap: 0.75rem;
+	padding-bottom: 1.1rem;
 	border-bottom: 1px solid var(--border);
+	max-width: min(100%, 98ch);
 }
 
 .article-header h1 {
-	max-width: 12ch;
-	font-size: clamp(2.8rem, 7vw, 5.8rem);
+	max-width: 30ch;
+	font-size: clamp(2rem, 4.6vw, 3.8rem);
+	line-height: 1.04;
+}
+
+.article-dek {
+	max-width: 86ch;
 }
 
 .article-prose {
-	max-width: var(--article-max);
+	max-width: min(100%, 84ch);
 	width: 100%;
 	margin: 0 auto;
 	font-family: var(--font-serif);
@@ -613,6 +619,28 @@ html.dark .shiki span {
 	background-color: var(--shiki-dark-bg) !important;
 }
 
+@media (min-width: 1400px) {
+	.article-shell {
+		padding-top: 1.5rem;
+		gap: 1.15rem;
+	}
+
+	.article-header {
+		gap: 0.6rem;
+		padding-bottom: 0.9rem;
+		max-width: min(100%, 106ch);
+	}
+
+	.article-header h1 {
+		max-width: 34ch;
+		font-size: clamp(1.95rem, 2.9vw, 3.2rem);
+	}
+
+	.article-prose {
+		max-width: min(100%, 88ch);
+	}
+}
+
 @media (max-width: 768px) {
 	.theme-shell {
 		width: min(calc(100% - 1rem), var(--page-max));
@@ -659,5 +687,6 @@ html.dark .shiki span {
 
 	.article-prose {
 		font-size: 1.04rem;
+		max-width: 100%;
 	}
 }
