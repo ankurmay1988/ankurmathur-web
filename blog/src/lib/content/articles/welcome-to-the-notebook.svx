@@ -1,0 +1,59 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Welcome to the Notebook',
+    excerpt:
+      'A first post to establish the reading rhythm, typography, and component styling for the new publication shell.',
+    published: '2026-05-04',
+    readingTime: '5 min read',
+    category: 'Essays',
+    featured: true,
+    coverAlt: 'Warm paper with editorial margin notes',
+    coverTone: 'amber'
+  };
+</script>
+
+The first version of a publication does not need a complex layout system. It needs a clear reading rhythm, enough contrast to stay comfortable for long stretches, and a shell that feels deliberate rather than generic.
+
+## The reading contract
+
+Readers make a small agreement with a page. They give it focus, time, and a little patience. The page should return a few things immediately:
+
+- a stable measure
+- generous line-height
+- quiet supporting chrome
+- links that are obvious without shouting
+
+That is why this theme starts narrow, calm, and typographic.
+
+> Good editorial design disappears at sentence level and returns at section level.
+
+### Notes from implementation
+
+The article pages use markdown-driven content, so the styling has to work for ordinary HTML rather than handcrafted components. That means headings, lists, tables, code, and blockquotes all need a coherent default presentation.
+
+```ts
+const decisions = {
+	measure: '68ch',
+	accent: 'restrained',
+	chrome: 'minimal',
+	mode: 'switchable'
+};
+
+export function summarize() {
+	return `${decisions.measure} with ${decisions.chrome} UI`;
+}
+```
+
+## A short table
+
+| Surface | Priority |
+| --- | --- |
+| Article body | Highest |
+| Shared shell | High |
+| Homepage list | High |
+
+The design system should be flexible enough to carry more posts later, but modest enough that plain markdown still looks intentional today.
+
+---
+
+If the system works, the rest of the publication inherits confidence instead of decoration.

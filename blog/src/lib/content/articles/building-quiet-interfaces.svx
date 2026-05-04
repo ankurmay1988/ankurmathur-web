@@ -1,0 +1,45 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Building Quiet Interfaces',
+    excerpt:
+      'Minimal interfaces are not empty. They are selective about where emphasis appears and where it should stay absent.',
+    published: '2026-05-02',
+    readingTime: '4 min read',
+    category: 'Design',
+    featured: false,
+    coverAlt: 'Monochrome drafting grid with a single ink stroke',
+    coverTone: 'slate'
+  };
+</script>
+
+Minimal layouts often fail because they remove signals without strengthening structure. Silence in a visual system only feels intentional when spacing, hierarchy, and contrast are doing real work.
+
+## What stays visible
+
+Three things should remain crisp even in a quiet interface:
+
+1. the page title
+2. the current reading path
+3. the interactive edges, especially links and controls
+
+When those anchors are clear, the rest of the page can step back.
+
+### Inline emphasis
+
+Inline code should feel distinct but not heavy, like `themeState.colorMode`, not like a component demo dropped into a paragraph.
+
+### Ordered depth
+
+1. Start with the sentence.
+2. Support it with rhythm.
+3. Add accent only where the eye needs a return point.
+
+```css
+.page {
+	max-width: 72rem;
+	margin: 0 auto;
+	padding-inline: 1.5rem;
+}
+```
+
+By the time a reader notices the system, it should already be helping.
