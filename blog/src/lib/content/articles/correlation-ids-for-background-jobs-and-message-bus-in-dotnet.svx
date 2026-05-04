@@ -1,0 +1,255 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Correlation IDs for Background Jobs and Message Bus in .NET',
+    excerpt:
+      'Part 3 of the correlation series: keep request identity alive after HTTP ends by carrying CorrelationId through job payloads, queue headers, and worker log scopes.',
+    published: '2026-05-05',
+    readingTime: '11 min read',
+    category: 'Backend',
+    featured: false,
+    coverAlt: 'Queue and worker nodes connected by message envelopes with correlation labels',
+    coverTone: 'slate'
+  };
+</script>
+
+HTTP correlation is only half the story. Incidents often cross async boundaries: API request enqueues work, worker consumes later, worker publishes another message, and eventually a notification goes out. If you drop identity at the queue edge, your trace breaks exactly where debugging gets hardest.
+
+In this part, we extend the same correlation model from earlier posts into background jobs and message-driven processing.
+
+## Series Navigation
+
+- [Part 1: End-to-End Log Correlation in ASP.NET Core (With a Serilog Option)](/articles/aspnet-core-log-correlation-end-to-end)
+- [Part 2: OpenTelemetry Trace Context and Correlation IDs in ASP.NET Core](/articles/opentelemetry-trace-context-and-correlation-ids-in-aspnet-core)
+- Part 3 (this article): Correlation IDs for Background Jobs and Message Bus in .NET
+- [Part 4: Production Hardening for Log Correlation in .NET](/articles/production-hardening-for-log-correlation-in-dotnet)
+- [Part 5: Serilog Correlation and Structured Logging in .NET](/articles/serilog-correlation-and-structured-logging-in-dotnet)
+
+## Why HTTP-Only Correlation Fails
+
+Inside HTTP, middleware and log scopes give you a natural request boundary. In async processing, there is no ambient request context. A worker can start minutes later on another machine.
+
+So the rule changes:
+
+1. Put correlation data in the message envelope.
+2. Rehydrate it into worker log scope when processing starts.
+3. Pass it forward on all follow-up messages.
+
+## A Minimal Envelope Contract
+
+Keep message contracts explicit. Do not rely on hidden ambient state.
+
+```csharp
+public sealed record MessageEnvelope<T>(
+    string MessageType,
+    string CorrelationId,
+    string? TraceParent,
+    DateTimeOffset OccurredAtUtc,
+    T Payload);
+
+public sealed record ScheduleWorkOrderRequest(
+    Guid WorkOrderId,
+    Guid TechnicianId,
+    DateOnly PlannedDate);
+```
+
+`CorrelationId` remains your app-facing key. `TraceParent` is optional but useful when bridging to tracing systems that can continue a parent context.
+
+## Producer Side: Publish With Identity
+
+From your API command handler, read ids from your request accessor and include them in the outgoing envelope.
+
+```csharp
+using System.Diagnostics;
+
+public sealed class WorkOrderPublisher
+{
+    private readonly IRequestIdentityAccessor _identity;
+    private readonly IMessageBus _bus;
+
+    public WorkOrderPublisher(IRequestIdentityAccessor identity, IMessageBus bus)
+    {
+        _identity = identity;
+        _bus = bus;
+    }
+
+    public Task PublishScheduleRequestAsync(
+        ScheduleWorkOrderRequest payload,
+        CancellationToken ct)
+    {
+        var envelope = new MessageEnvelope<ScheduleWorkOrderRequest>(
+            MessageType: "workorders.schedule.requested",
+            CorrelationId: _identity.GetCorrelationId(),
+            TraceParent: Activity.Current?.Id,
+            OccurredAtUtc: DateTimeOffset.UtcNow,
+            Payload: payload);
+
+        return _bus.PublishAsync(envelope, ct);
+    }
+}
+```
+
+The key design choice is intentional duplication: identity fields live in metadata, not buried inside payload models.
+
+## Consumer Side: Rehydrate Scope Early
+
+When a worker receives a message, create a processing scope before any domain logic.
+
+```csharp
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+
+public sealed class ScheduleWorkOrderConsumer
+{
+    private readonly ILogger<ScheduleWorkOrderConsumer> _logger;
+
+    public ScheduleWorkOrderConsumer(ILogger<ScheduleWorkOrderConsumer> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task HandleAsync(
+        MessageEnvelope<ScheduleWorkOrderRequest> envelope,
+        CancellationToken ct)
+    {
+        using var activity = new Activity("Consume workorders.schedule.requested");
+        if (!string.IsNullOrWhiteSpace(envelope.TraceParent))
+        {
+            activity.SetParentId(envelope.TraceParent);
+        }
+
+        activity.Start();
+
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CorrelationId"] = envelope.CorrelationId,
+            ["TraceId"] = activity.TraceId.ToString(),
+            ["MessageType"] = envelope.MessageType,
+            ["WorkOrderId"] = envelope.Payload.WorkOrderId
+        }))
+        {
+            _logger.LogInformation("Scheduling started");
+
+            await Task.Delay(5, ct);
+
+            _logger.LogInformation("Scheduling completed");
+        }
+    }
+}
+```
+
+If processing throws, failure logs still carry the same `CorrelationId` used by the initiating HTTP request.
+
+## Queue Header Mapping (Transport-Agnostic)
+
+Different brokers expose metadata differently, but the mapping is the same:
+
+- `correlation_id` -> `CorrelationId`
+- `traceparent` -> `TraceParent`
+- `message_type` -> `MessageType`
+
+Example sender abstraction:
+
+```csharp
+public interface IMessageBus
+{
+    Task PublishAsync<T>(MessageEnvelope<T> envelope, CancellationToken ct);
+}
+
+public sealed class JsonMessageBus : IMessageBus
+{
+    private readonly IQueueClient _queue;
+
+    public JsonMessageBus(IQueueClient queue)
+    {
+        _queue = queue;
+    }
+
+    public Task PublishAsync<T>(MessageEnvelope<T> envelope, CancellationToken ct)
+    {
+        var body = System.Text.Json.JsonSerializer.Serialize(envelope.Payload);
+
+        var headers = new Dictionary<string, string>
+        {
+            ["correlation_id"] = envelope.CorrelationId,
+            ["traceparent"] = envelope.TraceParent ?? string.Empty,
+            ["message_type"] = envelope.MessageType,
+            ["occurred_at"] = envelope.OccurredAtUtc.ToString("O")
+        };
+
+        return _queue.SendAsync(body, headers, ct);
+    }
+}
+```
+
+This lets you migrate from one broker to another without rewriting correlation strategy.
+
+## Scheduled and Recurring Jobs
+
+Recurring jobs often do not have a user request behind them. In that case, generate a new correlation id at execution start and keep it stable for that run.
+
+```csharp
+public sealed class OverdueWorkOrderSweepJob
+{
+    private readonly ILogger<OverdueWorkOrderSweepJob> _logger;
+
+    public OverdueWorkOrderSweepJob(ILogger<OverdueWorkOrderSweepJob> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task ExecuteAsync(CancellationToken ct)
+    {
+        var correlationId = $"job-overdue-sweep-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CorrelationId"] = correlationId,
+            ["JobName"] = "OverdueWorkOrderSweep"
+        }))
+        {
+            _logger.LogInformation("Sweep started");
+
+            await Task.Delay(5, ct);
+
+            _logger.LogInformation("Sweep finished");
+        }
+    }
+}
+```
+
+That gives operations one id to trace each scheduled run even without an incoming HTTP call.
+
+## Idempotency and Retries
+
+Retries can flood logs with near-duplicate entries. Add attempt metadata to keep runs understandable.
+
+```json
+{
+  "message": "Work order scheduling failed",
+  "CorrelationId": "wo_8fd2a0f0c2ad4cb8b85c",
+  "MessageType": "workorders.schedule.requested",
+  "Attempt": 3,
+  "MaxAttempts": 5,
+  "WorkOrderId": "2a53d241-233f-48f8-a720-b9dd9f41f3a7"
+}
+```
+
+Keep `CorrelationId` constant across retries. Change attempt counters, not identity.
+
+## Security Notes for Async Boundaries
+
+- Validate incoming correlation headers before enqueue.
+- Cap correlation id length and allowed characters.
+- Avoid putting PII into ids and queue headers.
+- If crossing trust boundaries, consider generating a new internal correlation id and storing external id separately.
+
+## Summary
+
+Async-safe correlation needs explicit design:
+
+1. put identity in every message envelope,
+2. rehydrate it into worker scopes immediately,
+3. preserve it across publish-consume hops,
+4. generate deterministic ids for scheduler-originated flows.
+
+With this in place, you can follow one incident from browser click to queue consumer to downstream API calls without losing context.

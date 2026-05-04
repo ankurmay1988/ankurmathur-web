@@ -138,6 +138,7 @@ Writing principles:
 - Include design rationale for non-obvious decisions (e.g., "We store `AgentName` directly because display names can change")
 - Each section should establish something the next section depends on
 - The "when to avoid" section should be honest — weak trade-off analysis erodes trust
+- For multi-part series posts, add a `## Series Navigation` section near the top that links to **all** parts in order; mark the current part as plain text (`Part N (this article): ...`)
 
 ### Step 6 — Validate
 
@@ -150,6 +151,7 @@ After creating the file, confirm:
 - [ ] No code block is indented (mdsvex breaks on indented fences)
 - [ ] File is in `blog/src/lib/content/articles/`
 - [ ] Slug matches the filename (no spaces, all lowercase)
+- [ ] If this is part of a multi-part series, a `## Series Navigation` section is present and links to all parts using `/articles/<slug>`
 
 Optionally run `svelte-check` and confirm any errors shown are pre-existing (not in the new file):
 

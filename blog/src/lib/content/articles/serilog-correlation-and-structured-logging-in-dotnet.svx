@@ -1,0 +1,294 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Serilog Correlation and Structured Logging in .NET',
+    excerpt:
+      'Part 5 of the correlation series: implement end-to-end correlation with Serilog, LogContext enrichment, request middleware, HttpClient propagation, and query-friendly event design.',
+    published: '2026-05-05',
+    readingTime: '10 min read',
+    category: 'Backend',
+    featured: false,
+    coverAlt: 'Structured log events flowing through services with highlighted correlation fields',
+    coverTone: 'rose'
+  };
+</script>
+
+You are now correlating requests across services, traces, and queues. The final step is making those logs truly queryable. That is where Serilog shines: every event is structured, property names are consistent, and correlation becomes a first-class field instead of a string hidden in message text.
+
+This part shows a Serilog-first implementation for the same maintenance platform used across the series.
+
+## Series Navigation
+
+- [Part 1: End-to-End Log Correlation in ASP.NET Core (With a Serilog Option)](/articles/aspnet-core-log-correlation-end-to-end)
+- [Part 2: OpenTelemetry Trace Context and Correlation IDs in ASP.NET Core](/articles/opentelemetry-trace-context-and-correlation-ids-in-aspnet-core)
+- [Part 3: Correlation IDs for Background Jobs and Message Bus in .NET](/articles/correlation-ids-for-background-jobs-and-message-bus-in-dotnet)
+- [Part 4: Production Hardening for Log Correlation in .NET](/articles/production-hardening-for-log-correlation-in-dotnet)
+- Part 5 (this article): Serilog Correlation and Structured Logging in .NET
+
+## Why a Dedicated Serilog Part
+
+Default logging can carry correlation scope, but Serilog gives you tighter control over:
+
+1. property naming discipline,
+2. event shape consistency,
+3. sink-specific output formats,
+4. query ergonomics in log backends.
+
+If your team debugs from structured events daily, this is worth doing explicitly.
+
+## 1. Configure Serilog with Context Enrichment
+
+Start by enabling context enrichment so properties pushed into `LogContext` appear in every log event within that scope.
+
+```csharp
+using Serilog;
+
+var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Service", "work-orders-api")
+    .WriteTo.Console()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+```
+
+`Enrich.FromLogContext()` is the key line. Without it, your correlation scope will not flow into output events.
+
+### Conceptual Note: `PushProperty` and `ILogger` Scopes
+
+At a conceptual level, `LogContext.PushProperty("CorrelationId", value)` behaves like opening a logging scope that carries a dictionary entry for `CorrelationId` across all log events in that ambient execution flow.
+
+Internally, Serilog keeps these values in its ambient `LogContext` and `Enrich.FromLogContext()` copies them onto each event. In the `Microsoft.Extensions.Logging` world, the closest equivalent is `BeginScope` with key-value pairs:
+
+```csharp
+using (logger.BeginScope(new Dictionary<string, object>
+{
+    ["CorrelationId"] = correlationId
+}))
+{
+    logger.LogInformation("Inside correlation scope");
+}
+```
+
+So while `PushProperty` is Serilog-native (not literally calling `BeginScope`), it is functionally the same idea: scope-bound properties flowing through `ILogger`-style logging pipelines.
+
+## 2. Add Correlation Middleware for Serilog
+
+At ingress, normalize the correlation id and push it into `LogContext`.
+
+```csharp
+using Serilog.Context;
+using System.Diagnostics;
+
+public sealed class SerilogCorrelationMiddleware
+{
+    private const string CorrelationHeader = "X-Correlation-Id";
+    private const string CorrelationItemKey = "CorrelationId";
+
+    private readonly RequestDelegate _next;
+
+    public SerilogCorrelationMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var incoming = context.Request.Headers[CorrelationHeader].ToString();
+        var correlationId = IsValid(incoming)
+            ? incoming
+            : Guid.NewGuid().ToString("N");
+
+        var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+
+        context.Items[CorrelationItemKey] = correlationId;
+        context.Response.Headers[CorrelationHeader] = correlationId;
+
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        using (LogContext.PushProperty("TraceId", traceId))
+        {
+            await _next(context);
+        }
+    }
+
+    private static bool IsValid(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length > 64)
+        {
+            return false;
+        }
+
+        return value.All(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_');
+    }
+}
+```
+
+Register it early in the pipeline:
+
+```csharp
+var app = builder.Build();
+
+app.UseMiddleware<SerilogCorrelationMiddleware>();
+
+app.MapControllers();
+app.Run();
+```
+
+## 3. Access Correlation Data Without HttpContext Leaks
+
+Use an accessor so application services stay testable.
+
+```csharp
+public interface ICorrelationAccessor
+{
+    string GetCorrelationId();
+}
+
+public sealed class HttpCorrelationAccessor : ICorrelationAccessor
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpCorrelationAccessor(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public string GetCorrelationId()
+    {
+        return _httpContextAccessor.HttpContext?.Items["CorrelationId"] as string ?? string.Empty;
+    }
+}
+```
+
+Registration:
+
+```csharp
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICorrelationAccessor, HttpCorrelationAccessor>();
+```
+
+## 4. Propagate Correlation on Outbound HttpClient Calls
+
+Keep propagation automatic with a delegating handler.
+
+```csharp
+public sealed class SerilogCorrelationHeaderHandler : DelegatingHandler
+{
+    private readonly ICorrelationAccessor _correlationAccessor;
+
+    public SerilogCorrelationHeaderHandler(ICorrelationAccessor correlationAccessor)
+    {
+        _correlationAccessor = correlationAccessor;
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        var correlationId = _correlationAccessor.GetCorrelationId();
+        if (!string.IsNullOrWhiteSpace(correlationId))
+        {
+            request.Headers.Remove("X-Correlation-Id");
+            request.Headers.Add("X-Correlation-Id", correlationId);
+        }
+
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+```
+
+```csharp
+builder.Services.AddTransient<SerilogCorrelationHeaderHandler>();
+
+builder.Services
+    .AddHttpClient<InventoryApiClient>(client =>
+    {
+        client.BaseAddress = new Uri("https://inventory-api.internal/");
+    })
+    .AddHttpMessageHandler<SerilogCorrelationHeaderHandler>();
+```
+
+## 5. Design Event Templates for Queryability
+
+Structured logging fails if templates are inconsistent. Keep message templates stable and put variable data in named properties.
+
+Good:
+
+```csharp
+logger.LogInformation(
+    "Dispatch created for {WorkOrderId} with {TechnicianId}",
+    workOrderId,
+    technicianId);
+```
+
+Avoid:
+
+```csharp
+logger.LogInformation($"Dispatch created for {workOrderId} with {technicianId}");
+```
+
+Interpolated strings turn structured fields into plain text in many sinks.
+
+## 6. Example Output Shape
+
+A query-friendly event should look like this:
+
+```json
+{
+  "Timestamp": "2026-05-05T21:07:11.152Z",
+  "Level": "Information",
+  "MessageTemplate": "Dispatch created for {WorkOrderId} with {TechnicianId}",
+  "Properties": {
+    "Service": "work-orders-api",
+    "CorrelationId": "wo_8fd2a0f0c2ad4cb8b85c",
+    "TraceId": "7b460d4f5e9c2beecf9418a6e9b91095",
+    "WorkOrderId": "2a53d241-233f-48f8-a720-b9dd9f41f3a7",
+    "TechnicianId": "a1b6cfcf-4f14-4c6f-86cc-4f645df5d1f6"
+  }
+}
+```
+
+This shape supports direct filters like `CorrelationId = ...` and group-by analysis on operation fields.
+
+## 7. Serilog Sink Notes
+
+- Console sink is good for local development and container stdout collection.
+- Central sinks (Seq, Elasticsearch-compatible backends, cloud log services) benefit most from structured fields.
+- Use per-sink minimum levels to control cost without dropping critical events.
+
+Example configuration snippet:
+
+```json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    }
+  }
+}
+```
+
+## 8. Common Mistakes
+
+- Missing `Enrich.FromLogContext()` so correlation properties never appear.
+- Pushing inconsistent property names (`Correlation`, `RequestId`, `Session`) across services.
+- Logging sensitive values in scope properties.
+- Relying on message text search instead of structured property queries.
+
+## Summary
+
+Serilog makes correlation operationally sharp:
+
+1. enrich once at request start,
+2. keep property names fixed,
+3. propagate headers automatically,
+4. write stable message templates,
+5. query by properties, not strings.
+
+That closes the series with a production-ready structured logging foundation for multi-service debugging.

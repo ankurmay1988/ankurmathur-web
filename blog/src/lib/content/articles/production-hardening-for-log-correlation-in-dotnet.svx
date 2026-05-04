@@ -1,0 +1,250 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'Production Hardening for Log Correlation in .NET',
+    excerpt:
+      'Part 4 of the correlation series: move from working correlation to reliable operations with sampling policy, redaction, retention tiers, dashboard design, and incident playbooks.',
+    published: '2026-05-05',
+    readingTime: '12 min read',
+    category: 'Backend',
+    featured: false,
+    coverAlt: 'Operations dashboard with alerts, logs, and traces connected by a single correlation key',
+    coverTone: 'amber'
+  };
+</script>
+
+By part 3, correlation works end to end. That is necessary, but not sufficient. In production, the harder question is reliability under stress: high traffic, noisy retries, privacy constraints, and on-call handoffs at 3 AM.
+
+This final part turns correlation from an implementation detail into an operations capability.
+
+## Series Navigation
+
+- [Part 1: End-to-End Log Correlation in ASP.NET Core (With a Serilog Option)](/articles/aspnet-core-log-correlation-end-to-end)
+- [Part 2: OpenTelemetry Trace Context and Correlation IDs in ASP.NET Core](/articles/opentelemetry-trace-context-and-correlation-ids-in-aspnet-core)
+- [Part 3: Correlation IDs for Background Jobs and Message Bus in .NET](/articles/correlation-ids-for-background-jobs-and-message-bus-in-dotnet)
+- Part 4 (this article): Production Hardening for Log Correlation in .NET
+- [Part 5: Serilog Correlation and Structured Logging in .NET](/articles/serilog-correlation-and-structured-logging-in-dotnet)
+
+## The Shift from "It Works" to "It Holds"
+
+A mature setup needs five guarantees:
+
+1. usable signal at high volume,
+2. safe handling of sensitive data,
+3. predictable retention and cost,
+4. fast triage dashboards,
+5. repeatable incident response.
+
+We will use the same maintenance platform from previous posts and harden it for real-world load.
+
+## 1. Sampling Policy Without Losing Incident Context
+
+If you sample blindly, your one failing request might be the one that disappears. Use policy-based sampling.
+
+- Keep all `Error` and `Critical` logs.
+- Keep all traces for endpoints with SLO violations.
+- Sample successful high-volume paths at a lower rate.
+- Never sample away the correlation key itself.
+
+Example log filtering with category-aware minimum levels:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+builder.Logging.AddFilter((category, level) =>
+{
+    if (category.Contains("Microsoft.AspNetCore", StringComparison.Ordinal))
+    {
+        return level >= LogLevel.Warning;
+    }
+
+    if (category.Contains("WorkOrders.Application", StringComparison.Ordinal))
+    {
+        return level >= LogLevel.Information;
+    }
+
+    return level >= LogLevel.Information;
+});
+```
+
+For traces, prefer parent-based decisions so one important root span keeps its child spans.
+
+```csharp
+using OpenTelemetry.Trace;
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .SetSampler(new ParentBasedSampler(new TraceIdRatioBasedSampler(0.2)))
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter());
+```
+
+This keeps cost under control while preserving investigation paths.
+
+## 2. Redaction and Safe Enrichment
+
+Correlation IDs should be opaque and non-sensitive. The danger is not the id itself; it is accidental extra fields in scope.
+
+Define an explicit enrichment allow-list:
+
+- allow: `CorrelationId`, `TraceId`, `WorkOrderId`, `TenantId`
+- block: email, phone, address, payment identifiers, free-form request bodies
+
+A simple sanitizer for structured dictionaries:
+
+```csharp
+public static class LogSanitizer
+{
+    private static readonly HashSet<string> AllowedKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "CorrelationId",
+        "TraceId",
+        "WorkOrderId",
+        "TenantId",
+        "MessageType",
+        "Attempt"
+    };
+
+    public static IReadOnlyDictionary<string, object> KeepAllowed(
+        IReadOnlyDictionary<string, object> values)
+    {
+        return values
+            .Where(kvp => AllowedKeys.Contains(kvp.Key))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    }
+}
+```
+
+Use this before creating log scopes when data comes from external input or large payloads.
+
+## 3. Retention Tiers and Cost Controls
+
+Without retention policy, observability platforms become expensive very quickly. Separate storage by use case.
+
+Recommended baseline:
+
+1. Hot logs (7-14 days): fast search for active incidents.
+2. Warm logs (30-90 days): slower search for recurring issues.
+3. Cold archive (6-12 months): compliance and forensic recovery.
+
+Tag entries with service and environment so lifecycle rules are precise.
+
+```json
+{
+  "timestamp": "2026-05-05T20:43:12.992Z",
+  "service": "work-orders-api",
+  "environment": "production",
+  "CorrelationId": "wo_8fd2a0f0c2ad4cb8b85c",
+  "TraceId": "7b460d4f5e9c2beecf9418a6e9b91095",
+  "level": "Information",
+  "message": "Dispatch created"
+}
+```
+
+Plan retention with finance and security early. Waiting until storage alarms fire is always more expensive.
+
+## 4. Dashboard Design for Fast Triage
+
+A good dashboard should answer two questions in under a minute:
+
+1. Is this isolated or system-wide?
+2. Where should I pivot next?
+
+Minimum dashboard blocks:
+
+- Error rate by service and endpoint
+- P95 and P99 latency trends
+- Top correlation ids by error volume in last 15 minutes
+- Failed background messages by `MessageType`
+- Trace span error heatmap by downstream dependency
+
+Example query sketch (adapt syntax to your backend):
+
+```sql
+SELECT CorrelationId, COUNT(*) AS ErrorCount
+FROM Logs
+WHERE Timestamp >= NOW() - INTERVAL '15 minutes'
+  AND Level IN ('Error', 'Critical')
+GROUP BY CorrelationId
+ORDER BY ErrorCount DESC
+LIMIT 20;
+```
+
+This gives on-call engineers a direct list of candidate incident threads.
+
+## 5. Incident Playbook Anchored on CorrelationId
+
+Process is where teams usually lose time. Write the playbook so everyone follows the same path.
+
+Suggested workflow:
+
+1. Get `CorrelationId` from alert, customer report, or failing response.
+2. Pull all logs for that id across all services.
+3. Extract one `TraceId` and open the full span graph.
+4. Identify first failing hop and confirm blast radius.
+5. Capture timeline, owner, and mitigation in incident notes.
+6. Add one regression test or synthetic check before closing.
+
+A playbook template for postmortems:
+
+```markdown
+# Incident Correlation Summary
+
+- CorrelationId:
+- TraceId:
+- First failing service:
+- Impact window:
+- Customer impact:
+- Root cause:
+- Mitigation shipped:
+- Follow-up tasks:
+```
+
+Consistency here turns tribal debugging habits into organizational memory.
+
+## 6. Alerting Rules That Use Correlation Data
+
+Alert on aggregate behavior, not one-off log lines.
+
+- Trigger when unique failing `CorrelationId` count exceeds threshold.
+- Trigger when one correlation id appears across more than N services with errors.
+- Suppress duplicate notifications using correlation id as dedup key.
+
+Pseudo-rule:
+
+```json
+{
+  "name": "multi-service-correlation-spike",
+  "windowMinutes": 10,
+  "condition": "distinct_error_correlation_ids > 50",
+  "dedupKey": "CorrelationId"
+}
+```
+
+This improves signal quality and reduces pager fatigue.
+
+## 7. Hardening Checklist
+
+Use this as a release gate for observability maturity:
+
+- Correlation id validated and normalized at ingress
+- Correlation and trace ids logged as separate properties
+- Outbound HTTP and message bus propagation automated
+- Worker scopes rehydrated from message metadata
+- Sensitive fields redacted by default
+- Retention tiers documented and enforced
+- Dashboards include correlation-based views
+- Incident playbook tested in at least one game day
+
+## Summary
+
+Correlation in production is a socio-technical system, not a single middleware class. The code creates identity continuity; operations practices make that continuity useful when incidents happen.
+
+After these four parts, you have a complete stack:
+
+1. ingress correlation setup,
+2. trace-context alignment,
+3. async and queue propagation,
+4. production guardrails for cost, privacy, and response speed.
+
+That is the difference between having logs and having a debugging system.

@@ -1,0 +1,268 @@
+<script module lang="ts">
+  export const metadata = {
+    title: 'OpenTelemetry Trace Context and Correlation IDs in ASP.NET Core',
+    excerpt:
+      'Part 2 of the correlation series: connect app-level CorrelationId with W3C trace context, propagate both safely, and keep logs and traces queryable together.',
+    published: '2026-05-05',
+    readingTime: '10 min read',
+    category: 'Backend',
+    featured: false,
+    coverAlt: 'Timeline diagram showing spans and correlated log lines across services',
+    coverTone: 'indigo'
+  };
+</script>
+
+In part 1, we made sure every request carried a stable `CorrelationId` through logs and outbound HTTP calls. That solved log search. Now we solve the next problem: aligning that id with distributed traces so one incident can be explored from either side.
+
+This post uses the same field-maintenance domain: Dispatcher UI -> Work Orders API -> Inventory API -> Routing API.
+
+## Series Navigation
+
+- [Part 1: End-to-End Log Correlation in ASP.NET Core (With a Serilog Option)](/articles/aspnet-core-log-correlation-end-to-end)
+- Part 2 (this article): OpenTelemetry Trace Context and Correlation IDs in ASP.NET Core
+- [Part 3: Correlation IDs for Background Jobs and Message Bus in .NET](/articles/correlation-ids-for-background-jobs-and-message-bus-in-dotnet)
+- [Part 4: Production Hardening for Log Correlation in .NET](/articles/production-hardening-for-log-correlation-in-dotnet)
+- [Part 5: Serilog Correlation and Structured Logging in .NET](/articles/serilog-correlation-and-structured-logging-in-dotnet)
+
+## What Changes in Part 2
+
+The core idea is simple:
+
+1. Keep `CorrelationId` as your app-facing support key.
+2. Adopt W3C `traceparent` for tracing interoperability.
+3. Store and log both values with clear semantics.
+4. Propagate both automatically so no service breaks the chain.
+
+`CorrelationId` and `TraceId` can be equal, but they do not have to be. In most systems, treat `TraceId` as telemetry infrastructure identity and `CorrelationId` as product/support identity.
+
+## Baseline OpenTelemetry Setup
+
+Start with tracing and ASP.NET Core instrumentation:
+
+```csharp
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("work-orders-api"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddSource("WorkOrders.Application")
+        .AddOtlpExporter());
+```
+
+This gives you spans for incoming requests and outbound `HttpClient` calls with W3C context propagation.
+
+## A Correlation Policy That Avoids Confusion
+
+Choose one ingress policy and document it.
+
+- If `X-Correlation-Id` exists and is valid, keep it.
+- If missing, generate a new correlation id.
+- Never overwrite `Activity.TraceId` manually.
+- Log both as separate properties: `CorrelationId` and `TraceId`.
+
+Middleware implementation:
+
+```csharp
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+
+public sealed class CorrelationAndTraceMiddleware
+{
+    private const string CorrelationHeader = "X-Correlation-Id";
+    private const string CorrelationItemKey = "CorrelationId";
+
+    private readonly RequestDelegate _next;
+    private readonly ILogger<CorrelationAndTraceMiddleware> _logger;
+
+    public CorrelationAndTraceMiddleware(
+        RequestDelegate next,
+        ILogger<CorrelationAndTraceMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var incoming = context.Request.Headers[CorrelationHeader].ToString();
+        var correlationId = IsSafeCorrelationId(incoming)
+            ? incoming
+            : Guid.NewGuid().ToString("N");
+
+        var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+
+        context.Items[CorrelationItemKey] = correlationId;
+        context.Response.Headers[CorrelationHeader] = correlationId;
+
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CorrelationId"] = correlationId,
+            ["TraceId"] = traceId
+        }))
+        {
+            await _next(context);
+        }
+    }
+
+    private static bool IsSafeCorrelationId(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        if (value.Length > 64)
+            return false;
+
+        return value.All(c => char.IsLetterOrDigit(c) || c is '-' or '_');
+    }
+}
+```
+
+This gives your support team a stable key while preserving standards-based tracing.
+
+## Accessor That Exposes Both IDs
+
+Keep request-id access centralized:
+
+```csharp
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
+
+public interface IRequestIdentityAccessor
+{
+    string GetCorrelationId();
+    string GetTraceId();
+}
+
+public sealed class HttpRequestIdentityAccessor : IRequestIdentityAccessor
+{
+    private const string CorrelationItemKey = "CorrelationId";
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpRequestIdentityAccessor(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public string GetCorrelationId()
+    {
+        return _httpContextAccessor.HttpContext?.Items[CorrelationItemKey] as string ?? string.Empty;
+    }
+
+    public string GetTraceId()
+    {
+        return Activity.Current?.TraceId.ToString() ?? string.Empty;
+    }
+}
+```
+
+Registration:
+
+```csharp
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRequestIdentityAccessor, HttpRequestIdentityAccessor>();
+```
+
+Now application services can enrich logs, audit events, and API responses without touching `HttpContext` directly.
+
+## Outgoing Propagation Strategy
+
+OpenTelemetry already handles `traceparent` and `tracestate` for instrumented clients. You only need to append your app-level correlation header.
+
+```csharp
+using System.Net.Http;
+
+public sealed class CorrelationHeaderHandler : DelegatingHandler
+{
+    private readonly IRequestIdentityAccessor _identityAccessor;
+
+    public CorrelationHeaderHandler(IRequestIdentityAccessor identityAccessor)
+    {
+        _identityAccessor = identityAccessor;
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        var correlationId = _identityAccessor.GetCorrelationId();
+
+        if (!string.IsNullOrWhiteSpace(correlationId))
+        {
+            request.Headers.Remove("X-Correlation-Id");
+            request.Headers.Add("X-Correlation-Id", correlationId);
+        }
+
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+```
+
+Attach to typed clients:
+
+```csharp
+builder.Services.AddTransient<CorrelationHeaderHandler>();
+
+builder.Services
+    .AddHttpClient<InventoryApiClient>(client =>
+    {
+        client.BaseAddress = new Uri("https://inventory-api.internal/");
+    })
+    .AddHttpMessageHandler<CorrelationHeaderHandler>();
+```
+
+This keeps your custom support key in play while OTel handles standard tracing headers.
+
+## Logging Query Pattern: Start with One, Jump to the Other
+
+In production, your workflow should be deterministic:
+
+1. Start from `CorrelationId` reported by a user or shown in an error payload.
+2. Find related application logs.
+3. Read `TraceId` from one of those logs.
+4. Jump into your tracing backend and inspect the full span graph.
+
+Example structured log payload:
+
+```json
+{
+  "level": "Information",
+  "message": "Work order dispatched",
+  "CorrelationId": "wo_8fd2a0f0c2ad4cb8b85c",
+  "TraceId": "7b460d4f5e9c2beecf9418a6e9b91095",
+  "WorkOrderId": "2a53d241-233f-48f8-a720-b9dd9f41f3a7"
+}
+```
+
+## Pitfalls to Avoid
+
+- Do not map arbitrary external headers directly into log scopes without validation.
+- Do not regenerate correlation ids mid-request.
+- Do not disable `HttpClient` instrumentation if you expect automatic `traceparent` propagation.
+- Do not assume every framework log line will include your app scope.
+
+## When This Pattern Pays Off
+
+Use this dual-id model when:
+
+- support teams need a customer-safe id to request,
+- engineering teams need deep span-level diagnostics,
+- requests cross multiple APIs and async boundaries.
+
+If your system is small and single-hop, `TraceId` alone may be enough.
+
+## Summary
+
+Part 2 is about identity discipline:
+
+1. keep app correlation and telemetry tracing distinct but linked,
+2. capture both at ingress,
+3. propagate correlation headers intentionally and trace headers automatically,
+4. query logs and traces as one debugging workflow.
+
+In part 3, we can cover background workers and message buses so correlation survives beyond HTTP.

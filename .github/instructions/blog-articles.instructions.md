@@ -166,6 +166,27 @@ That shell is responsible for:
 
 If you need to change shared article-page chrome, edit the route component rather than introducing a parallel mdsvex layout system unless you intend to refactor the whole content pipeline.
 
+## Multi-Part Series Navigation
+
+For any multi-part article series, every part must include a `## Series Navigation` section near the top of the article body.
+
+Requirements:
+
+- Include links to all parts in the series (not just previous/next)
+- Mark the current part as plain text (for example: `Part 3 (this article): ...`)
+- Use canonical article routes: `/articles/<slug>`
+- Keep order consistent in every part: Part 1, Part 2, Part 3, ...
+
+Example:
+
+```md
+## Series Navigation
+
+- [Part 1: Intro](/articles/series-part-1)
+- Part 2 (this article): Core Concepts
+- [Part 3: Advanced](/articles/series-part-3)
+```
+
 ## Custom Markdown Element Components
 
 Export named components from the layout's `<script module>` to replace default HTML elements:
