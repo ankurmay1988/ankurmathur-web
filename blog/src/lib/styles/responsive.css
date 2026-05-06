@@ -15,16 +15,11 @@
 	.article-header {
 		gap: 0.6rem;
 		padding-bottom: 0.9rem;
-		max-width: min(100%, 106ch);
 	}
 
 	.article-header h1 {
 		max-width: 34ch;
 		font-size: clamp(1.95rem, 2.9vw, 3.2rem);
-	}
-
-	.article-prose {
-		max-width: min(100%, 88ch);
 	}
 }
 

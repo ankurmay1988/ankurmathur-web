@@ -338,7 +338,8 @@
 .article-shell {
 	padding: clamp(1.4rem, 4vw, 3rem);
 	border-radius: calc(var(--radius) + 0.35rem);
-	max-width: 100%;
+	max-width: min(100%, 58rem);
+	margin-inline: auto;
 	display: grid;
 	gap: 1.4rem;
 }
@@ -370,9 +371,8 @@
 /* ── Article prose ────────────────────────────────────────────── */
 
 .article-prose {
-	max-width: min(100%, 84ch);
+	max-width: 100%;
 	width: 100%;
-	margin: 0 auto;
 	font-family: var(--font-serif);
 	font-size: 1.15rem;
 	line-height: 1.8;
