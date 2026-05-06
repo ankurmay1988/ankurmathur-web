@@ -21,14 +21,21 @@ The blog implementation added these major pieces:
 
 The most important files are:
 
-- `src/routes/+layout.svelte`: shared application shell, header, theme controls, and theme persistence
-- `src/routes/layout.css`: the design system and most of the editorial styling
+- `src/routes/+layout.svelte`: minimal root layout — anti-FOUC IIFE, Google Fonts links, favicon only
+- `src/routes/(app)/+layout.svelte`: full blog shell — nav, theme switcher, theme persistence, imports CSS
+- `src/lib/styles/layout.css`: CSS entry point that imports all theme files, base, components, and responsive CSS
+- `src/lib/styles/themes/`: one CSS file per visual theme (`paper.css`, `journal.css`, `mono.css`, `romantic.css`, `sketch.css`)
+- `src/lib/styles/components.css`: all shared component classes (`.card`, `.btn`, `.btn-primary`, `.btn-ghost`, `.tag`, `.field`, `.skeleton`, `.empty-state`, `.divider`, etc.)
+- `src/lib/styles/base.css`: html/body resets, selection, links
+- `src/lib/styles/responsive.css`: all `@media` breakpoints (theme-agnostic)
 - `src/lib/theme.svelte.ts`: theme types and theme resolution helpers
 - `src/lib/articles.ts`: article discovery, metadata normalization, sorting, and lookup helpers
-- `src/routes/+page.ts`: homepage data loader
-- `src/routes/+page.svelte`: homepage UI for the featured story and article cards
-- `src/routes/articles/[articleSlug]/+page.ts`: article existence check and 404 handling
-- `src/routes/articles/[articleSlug]/+page.svelte`: article page shell and article component render
+- `src/routes/(app)/+page.ts`: homepage data loader
+- `src/routes/(app)/+page.svelte`: homepage UI for the featured story and article cards
+- `src/routes/(app)/articles/[articleSlug]/+page.ts`: article existence check and 404 handling
+- `src/routes/(app)/articles/[articleSlug]/+page.svelte`: article page shell and article component render
+- `src/routes/sample/+layout.svelte`: isolated bare layout for the Component Museum (no theme CSS)
+- `src/routes/sample/+page.svelte`: `/sample` Component Museum developer reference page
 - `src/lib/content/articles/*.svx`: article source files
 - `svelte.config.js`: mdsvex and Shiki configuration
 
@@ -54,15 +61,18 @@ The content and rendering pipeline can be summarized like this:
 flowchart TD
   A[src/lib/content/articles/*.svx] --> B[svelte.config.js mdsvex + Shiki preprocess]
   B --> C[src/lib/articles.ts registry]
-  C --> D[src/routes/+page.ts]
-  C --> E[src/routes/articles/[articleSlug]/+page.ts]
-  D --> F[src/routes/+page.svelte homepage]
-  E --> G[src/routes/articles/[articleSlug]/+page.svelte article shell]
+  C --> D[src/routes/(app)/+page.ts]
+  C --> E[src/routes/(app)/articles/[articleSlug]/+page.ts]
+  D --> F[src/routes/(app)/+page.svelte homepage]
+  E --> G[src/routes/(app)/articles/[articleSlug]/+page.svelte article shell]
   C --> G
-  H[src/routes/+layout.svelte theme shell] --> F
+  H[src/routes/+layout.svelte root: anti-FOUC + fonts] --> F
   H --> G
-  I[src/routes/layout.css design system] --> F
-  I --> G
+  J[src/routes/(app)/+layout.svelte blog shell + theme switcher] --> F
+  J --> G
+  I[src/lib/styles/layout.css CSS entry] --> J
+  K[src/lib/styles/themes/*.css 5 themes] --> I
+  L[src/lib/styles/components.css shared classes] --> I
 ```
 
 Read it from left to right:
@@ -121,12 +131,12 @@ The rest of the app uses these helpers:
 
 ### Homepage
 
-`src/routes/+page.ts` returns:
+`src/routes/(app)/+page.ts` returns:
 
 - `featured`
 - `articles`
 
-`src/routes/+page.svelte` then:
+`src/routes/(app)/+page.svelte` then:
 
 - renders the hero section
 - renders the featured article block if one exists
@@ -137,9 +147,9 @@ Links to article pages are created with SvelteKit's `resolve('/articles/[article
 
 ### Article Route
 
-`src/routes/articles/[articleSlug]/+page.ts` is intentionally narrow. It only verifies that the article summary exists. If the slug is unknown, it throws a `404`.
+`src/routes/(app)/articles/[articleSlug]/+page.ts` is intentionally narrow. It only verifies that the article summary exists. If the slug is unknown, it throws a `404`.
 
-`src/routes/articles/[articleSlug]/+page.svelte` then:
+`src/routes/(app)/articles/[articleSlug]/+page.svelte` then:
 
 - reads the slug from route params
 - fetches the full article record with `getArticleBySlug(slug)`
@@ -242,58 +252,66 @@ If an article has `featured: true`, the homepage can use it as the featured stor
 
 ## How Styling Works
 
-Most styling lives in `src/routes/layout.css`.
+Styling is a modular CSS system that lives in `src/lib/styles/`. The entry point is `layout.css`, which is imported **only** by `src/routes/(app)/+layout.svelte` — not the root layout — so the blog's theme CSS never leaks to isolated routes like `/sample`.
 
-This file is not only page layout CSS. It is effectively the blog design system.
+### File Layout
+
+```
+src/lib/styles/
+  layout.css          ← entry: @import tailwindcss + all theme files + base + components + responsive
+  base.css            ← html, body, ::selection, a, img resets
+  components.css      ← all shared component classes (.card, .btn, .tag, .field, .skeleton, etc.)
+  responsive.css      ← @media breakpoints (theme-agnostic)
+  themes/
+    paper.css         ← default :root + html.dark[data-theme='paper']
+    journal.css
+    mono.css
+    romantic.css
+    sketch.css
+```
 
 ### Theme Tokens
 
-The CSS defines design tokens for three visual themes:
+Five visual themes are available: `paper`, `journal`, `mono`, `romantic`, `sketch`.
 
-- `paper`
-- `journal`
-- `mono`
+Each theme CSS file defines two blocks:
 
-Each theme sets variables such as:
+- `html[data-theme='<slug>'] { ... }` — §1 light-mode design tokens
+- `html.dark[data-theme='<slug>'] { ... }` — §1 dark-mode token overrides
+- Optional §2 blocks for effects tokens cannot express (backgrounds, pseudo-content, hard shadows, font-family overrides on specific elements)
 
-- `--bg`
-- `--surface`
-- `--text`
-- `--muted`
-- `--accent`
-- `--code-bg`
+Required tokens per theme: `--bg`, `--bg-accent`, `--surface`, `--surface-strong`, `--text`, `--muted`, `--border`, `--accent`, `--accent-soft`, `--quote`, `--code-bg`, `--hero-glow`, `--selection`.
 
-Dark variants are defined under selectors like:
+Optional per-theme tokens: `--font-sans`, `--font-serif`, `--font-display`, `--radius`, `--shadow-soft`, `--error`.
 
-```css
-html.dark[data-theme='paper'] { ... }
-html.dark[data-theme='journal'] { ... }
-html.dark[data-theme='mono'] { ... }
-```
+### Shared Component Classes
+
+`components.css` contains base styles for all reusable UI elements. Every value uses `var(--token)`, so adding a new theme automatically styles all components correctly.
+
+Available classes:
+
+| Class | Role |
+|---|---|
+| `.card` | Generic surface panel |
+| `.btn` | Button base (combine with modifier) |
+| `.btn-primary` | Filled accent button |
+| `.btn-ghost` | Outline/transparent button |
+| `.tag` | Pill label / badge |
+| `.field` / `.field-label` / `.field-input` / `.field-error` | Form field stack |
+| `.skeleton` | Shimmer loading placeholder |
+| `.empty-state` / `__icon` / `__title` / `__body` | Empty state layout |
+| `.divider` | Horizontal rule |
 
 ### Shell And Layout Styles
 
-The same CSS file also styles:
-
-- the sticky header
-- theme controls
-- homepage hero section
-- featured article section
-- article cards
-- article page shell
-- typography for prose content
+The `(app)/+layout.svelte` styles (`.theme-shell`, `.site-chrome`, `.brand-mark`, `.theme-chip`, `.mode-toggle`, etc.) are scoped inside `components.css` and the layout-specific sections.
 
 ### Prose Styling
 
 Articles are rendered as mostly standard HTML from markdown, so `.article-prose` is the critical styling layer. It defines how default HTML elements should look:
 
-- headings
-- paragraphs
-- lists
-- blockquotes
-- tables
-- inline code
-- fenced code blocks
+- headings, paragraphs, lists, blockquotes, tables
+- inline code and fenced code blocks
 - horizontal rules
 
 That means a plain markdown article still looks intentional without handcrafted article components.
@@ -303,9 +321,7 @@ That means a plain markdown article still looks intentional without handcrafted 
 Code snippets are styled in two layers:
 
 - Shiki generates syntax-highlighted HTML for fenced blocks
-- `layout.css` styles both inline code and `<pre><code>` blocks to match the editorial theme
-
-Recent changes increased code emphasis by making inline code more contrasty and giving block code a stronger framed container.
+- `components.css` styles both inline code and `<pre><code>` blocks to match the editorial theme
 
 ## How Syntax Highlighting Works
 
@@ -328,7 +344,7 @@ Theme logic is split between `src/lib/theme.svelte.ts` and `src/routes/+layout.s
 
 `src/lib/theme.svelte.ts` defines:
 
-- the available visual themes
+- the available visual themes (`visualThemes` array — source of truth)
 - the available color modes
 - the `ThemeState` type
 - `resolveEffectiveMode(...)`
@@ -337,14 +353,25 @@ The visual theme controls the editorial look. The color mode controls whether th
 
 ### Runtime Behavior
 
-`src/routes/+layout.svelte`:
+Theme logic is split across two layout files:
 
-- keeps theme state in Svelte runes state
-- loads persisted values from `localStorage`
-- listens to `prefers-color-scheme`
-- computes the effective mode for system behavior
-- writes theme state to the root HTML element using `data-theme`, `data-mode`, and `data-effective-mode`
-- toggles the `dark` class on `<html>`
+**Root layout (`src/routes/+layout.svelte`):**
+
+- Contains an inline anti-FOUC IIFE that runs before JS hydration
+- IIFE reads `localStorage`, sets `data-theme`, `data-mode`, and the `dark` class on `<html>` before first paint
+- Contains a hardcoded `visualThemes` array that **must mirror** `theme.svelte.ts`
+- Loads Google Fonts and favicon — applies to all routes including `/sample`
+- Does **not** import any CSS
+
+**Blog app layout (`src/routes/(app)/+layout.svelte`):**
+
+- Imports `$lib/styles/layout.css` (full theme CSS — applies only to blog routes)
+- Keeps theme state in Svelte runes (`$state`, `$effect`)
+- Loads persisted values from `localStorage`
+- Listens to `prefers-color-scheme`
+- Computes effective mode for system behavior
+- Renders nav, theme chip switcher, and color mode toggle
+- Contains the `themeLabels` display-name map
 
 ### Persistence
 
@@ -359,7 +386,7 @@ That means the selected visual theme and mode survive page reloads.
 
 The header has two theme control groups:
 
-- visual theme buttons for `paper`, `journal`, and `mono`
+- visual theme buttons for `paper`, `journal`, `mono`, `romantic`, and `sketch`
 - mode controls for explicit light or dark switching and returning to system mode
 
 The dark-mode toggle is a sliding thumb control. Its visual position follows the effective light or dark state.
@@ -370,12 +397,13 @@ The system-mode button switches back to system preference tracking.
 
 ### Add New Visual Themes
 
-To add a new visual theme:
+A detailed workflow is documented in `.github/skills/add-blog-theme/SKILL.md`. Short version:
 
-1. Add the theme key to `visualThemes` in `src/lib/theme.svelte.ts`.
-2. Extend `VisualTheme` usage where needed.
-3. Add a label in `src/routes/+layout.svelte`.
-4. Add CSS variable blocks in `src/routes/layout.css` for light and dark versions.
+1. Create `src/lib/styles/themes/<slug>.css` with §1 light/dark token blocks and any §2 component overrides.
+2. Add `@import './themes/<slug>.css'` to `src/lib/styles/layout.css`.
+3. Add `'<slug>'` to `visualThemes` in `src/lib/theme.svelte.ts`.
+4. Add label entry to `themeLabels` in `src/routes/(app)/+layout.svelte`.
+5. Add `'<slug>'` to the IIFE array in `src/routes/+layout.svelte` (anti-FOUC).
 
 If you skip the CSS token blocks, the new theme button will exist but not have a unique visual identity.
 
@@ -507,7 +535,7 @@ When making future changes, keep these constraints in mind:
 
 - the project uses Svelte 5 runes mode
 - article content is markdown-first and should continue to work as plain HTML output
-- styling is centralized in `src/routes/layout.css`, so design changes should usually start there
+- styling is centralized in `src/lib/styles/` (entry: `layout.css`), so design changes should usually start in the relevant theme file or `components.css`
 - content discovery is automatic, so avoid adding manual article registries unless there is a strong reason
 - homepage and article routes depend on consistent article metadata
 
@@ -540,7 +568,25 @@ Its core idea is simple:
 - content files drive the site
 - route files stay thin
 - `articles.ts` owns discovery and normalization
-- `layout.css` owns the visual system
-- `+layout.svelte` owns theming and shared chrome
+- `src/lib/styles/` owns the visual system (one file per theme; shared component classes in `components.css`)
+- root `+layout.svelte` owns anti-FOUC and fonts; `(app)/+layout.svelte` owns the blog chrome and theme switcher
+
+### Route Architecture
+
+```
+src/routes/
+  +layout.svelte                        ← root: anti-FOUC IIFE + fonts + favicon (no CSS import)
+  (app)/
+    +layout.svelte                      ← blog layout: full CSS + nav + theme switcher
+    +page.svelte / +page.ts             ← / homepage
+    articles/
+      [articleSlug]/
+        +page.svelte / +page.ts         ← /articles/:slug
+  sample/
+    +layout.svelte                      ← bare layout: only components.css + neutral token fallbacks
+    +page.svelte                        ← /sample Component Museum (dev reference)
+```
+
+The `(app)/` route group keeps blog-chrome-wrapped routes isolated from `sample/`, which intentionally has no nav, no theme switcher, and no theme CSS pollution.
 
 As long as that separation stays intact, the blog should remain easy to extend without turning into a brittle set of one-off pages.

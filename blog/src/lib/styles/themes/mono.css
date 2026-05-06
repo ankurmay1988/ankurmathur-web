@@ -1,0 +1,38 @@
+/*
+ * ================================================================
+ *  MONO THEME
+ *  High-contrast monochrome palette.
+ * ================================================================
+ */
+
+html[data-theme='mono'] {
+	--bg: #f2f2f0;
+	--bg-accent: #deded8;
+	--surface: rgb(255 255 255 / 0.72);
+	--surface-strong: rgb(255 255 255 / 0.9);
+	--text: #111111;
+	--muted: #585858;
+	--border: rgb(17 17 17 / 0.1);
+	--accent: #111111;
+	--accent-soft: rgb(17 17 17 / 0.08);
+	--quote: #111111;
+	--code-bg: rgb(17 17 17 / 0.05);
+	--hero-glow: rgb(17 17 17 / 0.14);
+	--selection: rgb(17 17 17 / 0.14);
+}
+
+html.dark[data-theme='mono'] {
+	--bg: #0f0f10;
+	--bg-accent: #1d1d1f;
+	--surface: rgb(22 22 24 / 0.86);
+	--surface-strong: rgb(28 28 30 / 0.96);
+	--text: #f3f3f1;
+	--muted: #b8b8b2;
+	--border: rgb(243 243 241 / 0.12);
+	--accent: #f3f3f1;
+	--accent-soft: rgb(243 243 241 / 0.12);
+	--quote: #f3f3f1;
+	--code-bg: rgb(243 243 241 / 0.1);
+	--hero-glow: rgb(243 243 241 / 0.12);
+	--selection: rgb(243 243 241 / 0.16);
+}

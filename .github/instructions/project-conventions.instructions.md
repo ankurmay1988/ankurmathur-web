@@ -68,13 +68,39 @@ Runes mode is **forced** for all non-library files via `svelte.config.js`. Alway
 ## Blog — Article Routing & mdsvex
 
 - Article content currently lives at `blog/src/lib/content/articles/`
-- Article pages render through `blog/src/routes/articles/[articleSlug]/+page.svelte`, but the content itself is loaded from the article registry in `blog/src/lib/articles.ts`
+- Article pages render through `blog/src/routes/(app)/articles/[articleSlug]/+page.svelte`, loaded from the article registry in `blog/src/lib/articles.ts`
 - mdsvex processes `.svx` and `.md` files as Svelte components — in this blog, prefer `.svx` for article content because the implementation uses module-script metadata exports
 - Route params use `params.articleSlug` (camelCase), not `params.article_slug`
 - Article discovery is automatic via `import.meta.glob('./content/articles/*.{md,svx}', { eager: true })` inside `blog/src/lib/articles.ts`; do not add a manual registry unless the architecture changes
 - The current article metadata model is `title`, `excerpt`, `published`, `readingTime`, `category`, `featured`, `coverAlt`, and `coverTone`
 - The homepage relies on `getFeaturedArticle()` and filters the featured article out of the remaining list to avoid duplicate keyed entries
-- Theme state is centralized in `blog/src/lib/theme.svelte.ts` and applied from `blog/src/routes/+layout.svelte` using `data-theme`, `data-mode`, `data-effective-mode`, and the `dark` class on `<html>`
+- Theme state is centralized in `blog/src/lib/theme.svelte.ts`. The anti-FOUC IIFE (runs before hydration) lives in the root `blog/src/routes/+layout.svelte`; the full theme switcher UI and `themeLabels` map live in `blog/src/routes/(app)/+layout.svelte`
+
+## Blog — CSS Architecture
+
+- All blog styles live in `blog/src/lib/styles/` — **not** in `src/routes/layout.css` (that file no longer exists)
+- Entry point is `blog/src/lib/styles/layout.css`, imported only by `blog/src/routes/(app)/+layout.svelte`
+- Five themes: `paper` (default), `journal`, `mono`, `romantic`, `sketch` — each in `src/lib/styles/themes/<slug>.css`
+- Theme CSS uses the pattern: `html[data-theme='<slug>'] { ... }` for light, `html.dark[data-theme='<slug>'] { ... }` for dark
+- `components.css` contains all shared component classes (`.card`, `.btn`, `.btn-primary`, `.btn-ghost`, `.tag`, `.field*`, `.skeleton`, `.empty-state*`, `.divider`) — all use CSS custom properties so new themes auto-style them
+- The root `+layout.svelte` imports **no CSS** (anti-FOUC IIFE + fonts only); the `(app)/+layout.svelte` imports the full `layout.css`
+- `/sample` route has its own bare layout that imports only `components.css` with neutral token fallbacks — completely isolated from theme CSS
+
+## Blog — Route Group Architecture
+
+```
+blog/src/routes/
+  +layout.svelte                  ← root: minimal (anti-FOUC IIFE, fonts, favicon — no CSS)
+  (app)/
+    +layout.svelte                ← blog shell: layout.css + nav + theme switcher
+    +page.svelte / +page.ts       ← / homepage
+    articles/[articleSlug]/       ← /articles/:slug
+  sample/
+    +layout.svelte                ← isolated: only components.css
+    +page.svelte                  ← /sample Component Museum
+```
+
+When adding new blog routes, put them inside `(app)/` so they get the full nav and theme chrome automatically.
 
 ## Formatting (Prettier)
 

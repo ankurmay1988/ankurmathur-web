@@ -1,0 +1,46 @@
+/*
+ * ================================================================
+ *  PAPER THEME (default)
+ *  Light tokens live at :root — they apply when no data-theme is set.
+ *  Dark tokens live at html.dark[data-theme='paper'].
+ * ================================================================
+ */
+
+:root {
+	color-scheme: light;
+	--font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', sans-serif;
+	--font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+	--page-max: 76rem;
+	--article-max: 68ch;
+	--radius: 1.5rem;
+	--shadow-soft: 0 24px 80px rgb(15 23 42 / 0.08);
+	--bg: #f6f1e8;
+	--bg-accent: #efe5d6;
+	--surface: rgb(255 251 245 / 0.78);
+	--surface-strong: rgb(255 251 245 / 0.94);
+	--text: #1f1b16;
+	--muted: #6f6558;
+	--border: rgb(101 84 65 / 0.18);
+	--accent: #9a5f2b;
+	--accent-soft: rgb(154 95 43 / 0.12);
+	--quote: #5b3c26;
+	--code-bg: rgb(58 42 30 / 0.06);
+	--hero-glow: rgb(195 126 68 / 0.22);
+	--selection: rgb(154 95 43 / 0.18);
+}
+
+html.dark[data-theme='paper'] {
+	--bg: #171311;
+	--bg-accent: #2a1e18;
+	--surface: rgb(34 25 22 / 0.84);
+	--surface-strong: rgb(44 32 27 / 0.94);
+	--text: #f6efe6;
+	--muted: #c5b5a1;
+	--border: rgb(246 239 230 / 0.12);
+	--accent: #f0a261;
+	--accent-soft: rgb(240 162 97 / 0.14);
+	--quote: #ffd0a8;
+	--code-bg: rgb(240 162 97 / 0.12);
+	--hero-glow: rgb(240 162 97 / 0.14);
+	--selection: rgb(240 162 97 / 0.22);
+}

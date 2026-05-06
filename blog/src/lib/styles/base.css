@@ -1,0 +1,45 @@
+/*
+ * ================================================================
+ *  BASE STYLES
+ *  Global dark-mode color-scheme + element resets.
+ *  Theme token defaults live in themes/paper.css (:root).
+ * ================================================================
+ */
+
+html.dark {
+	color-scheme: dark;
+}
+
+::selection {
+	background: var(--selection);
+}
+
+html,
+body {
+	min-height: 100%;
+	background:
+		radial-gradient(circle at top left, var(--hero-glow), transparent 28%),
+		radial-gradient(circle at bottom right, var(--bg-accent), transparent 32%), var(--bg);
+	color: var(--text);
+	font-family: var(--font-sans);
+	text-rendering: optimizeLegibility;
+	transition:
+		background-color 220ms ease,
+		color 220ms ease;
+}
+
+body {
+	margin: 0;
+	line-height: 1.6;
+}
+
+a {
+	color: inherit;
+	text-decoration-color: color-mix(in srgb, var(--accent) 46%, transparent);
+	text-underline-offset: 0.18em;
+}
+
+img {
+	max-width: 100%;
+	display: block;
+}

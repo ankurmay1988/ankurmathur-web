@@ -1,0 +1,79 @@
+/*
+ * ================================================================
+ *  RESPONSIVE OVERRIDES
+ *  Viewport-specific layout adjustments.
+ *  These apply on top of the base component styles.
+ * ================================================================
+ */
+
+@media (min-width: 1400px) {
+	.article-shell {
+		padding-top: 1.5rem;
+		gap: 1.15rem;
+	}
+
+	.article-header {
+		gap: 0.6rem;
+		padding-bottom: 0.9rem;
+		max-width: min(100%, 106ch);
+	}
+
+	.article-header h1 {
+		max-width: 34ch;
+		font-size: clamp(1.95rem, 2.9vw, 3.2rem);
+	}
+
+	.article-prose {
+		max-width: min(100%, 88ch);
+	}
+}
+
+@media (max-width: 768px) {
+	.theme-shell {
+		width: min(calc(100% - 1rem), var(--page-max));
+		padding-top: 0.75rem;
+	}
+
+	.site-chrome,
+	.featured-story {
+		grid-template-columns: 1fr;
+	}
+
+	.site-chrome {
+		position: static;
+		align-items: start;
+	}
+
+	.theme-controls {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.theme-group,
+	.mode-controls {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.theme-chip {
+		flex: 1 1 0;
+	}
+
+	.story-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.home-hero h1,
+	.article-header h1 {
+		max-width: none;
+	}
+
+	.article-shell {
+		padding-inline: 1rem;
+	}
+
+	.article-prose {
+		font-size: 1.04rem;
+		max-width: 100%;
+	}
+}

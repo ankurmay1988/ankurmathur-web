@@ -18,7 +18,7 @@
 	/>
 </svelte:head>
 
-<section class="home-hero">
+<!-- <section class="home-hero">
 	<p class="eyebrow">Independent notes on building, writing, and interface craft</p>
 	<h1>Calm reading surfaces for essays, field notes, and working drafts.</h1>
 	<p class="hero-copy">
@@ -26,7 +26,7 @@
 		the way. The result is a markdown-first shell that can switch personality without rebuilding the
 		reading experience.
 	</p>
-</section>
+</section> -->
 
 {#if featured}
 	<section class="featured-story">

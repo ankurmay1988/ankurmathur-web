@@ -1,4 +1,4 @@
-export const visualThemes = ['paper', 'journal', 'mono'] as const;
+export const visualThemes = ['paper', 'mono', 'sketch'] as const;
 export const colorModes = ['light', 'dark', 'system'] as const;
 
 export type VisualTheme = (typeof visualThemes)[number];

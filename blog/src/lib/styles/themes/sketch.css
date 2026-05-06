@@ -1,0 +1,372 @@
+/*
+ * ================================================================
+ *  SKETCH THEME — Hand-Drawn Sketch-Note
+ * ================================================================
+ *  Activated by:  html[data-theme='sketch']
+ *
+ *  HOW TO SWAP THIS FOR A DIFFERENT DESIGN:
+ *    §1  Update CSS custom property overrides (colors, fonts, shape).
+ *        Every component that reads these tokens updates automatically.
+ *    §2  Update the component adjustments block. These cover effects
+ *        tokens alone cannot express: repeating ruled-line backgrounds,
+ *        pseudo-content decorations, hard-offset shadows, etc.
+ *
+ *  No markup changes are required.
+ * ================================================================
+ */
+
+/* ------------------------------------------------------------------
+   §1  DESIGN TOKENS — LIGHT MODE (Hand-Drawn Sketch-Note DESIGN.md)
+   ------------------------------------------------------------------ */
+html[data-theme='sketch'] {
+	color-scheme: light;
+
+	/* Colors — notebook paper / ink blue / red accent */
+	--bg: #f4f1ea;
+	--bg-accent: #edeade;
+	--surface: rgb(244 241 234 / 0.94);
+	--surface-strong: rgb(244 241 234 / 0.99);
+	--text: #0e2a5c; /* ink blue */
+	--muted: rgb(14 42 92 / 0.52);
+	--border: rgb(14 42 92 / 0.16);
+	--accent: #b82020;
+	--accent-soft: rgb(209 40 40 / 0.1);
+	--quote: #0000cc; /* ballpoint blue */
+	--code-bg: rgb(255 255 165 / 0.5); /* highlighter yellow */
+	--hero-glow: transparent;
+	--selection: rgb(255 255 165 / 0.72);
+
+	/* Typography — Patrick Hand everywhere */
+	--font-sans: 'Patrick Hand', cursive;
+	--font-serif: 'Patrick Hand', cursive;
+
+	/* Shape — angular to match sketch aesthetic */
+	--radius: 0.45rem;
+
+	/* Shadow — flat hard-offset ink shadow */
+	--shadow-soft: 3px 4px 0 rgb(14 42 92 / 0.1);
+}
+
+/* ------------------------------------------------------------------
+   §2  COMPONENT ADJUSTMENTS — LIGHT MODE
+   Targets existing classes only — no new markup or class names.
+   ------------------------------------------------------------------ */
+
+/*
+ * Full-page ruled-line background.
+ * Overrides the html,body radial-gradient rule (which uses token vars).
+ * Both selectors needed because html and body each carry their own
+ * background declaration in base.css.
+ */
+html[data-theme='sketch'],
+html[data-theme='sketch'] body {
+	background:
+		repeating-linear-gradient(
+			to bottom,
+			transparent,
+			transparent calc(1.6rem - 1px),
+			rgb(14 42 92 / 0.075) calc(1.6rem - 1px),
+			rgb(14 42 92 / 0.075) 1.6rem
+		),
+		#f4f1ea;
+}
+
+/* Nav — solid paper instead of frosted glass; hard-offset shadow */
+html[data-theme='sketch'] .site-chrome {
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	background: var(--surface-strong);
+	border: 1.5px solid rgb(14 42 92 / 0.22);
+	box-shadow: 3px 3px 0 rgb(14 42 92 / 0.1);
+}
+
+/* Brand mark — hand-drawn underline via accent red */
+html[data-theme='sketch'] .brand-mark {
+	text-decoration: underline;
+	text-decoration-color: rgb(209 40 40 / 0.45);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+
+/* Active theme chip — red fill */
+html[data-theme='sketch'] .theme-chip.active {
+	background: var(--accent);
+	color: #fff5f5;
+}
+
+/*
+ * Hero — left red margin line (mimics a real ruled notebook page).
+ * isolation: isolate keeps ::after z-index:-1 behind card text.
+ */
+html[data-theme='sketch'] .home-hero {
+	position: relative;
+	isolation: isolate;
+	border-left: 3px solid rgb(209 40 40 / 0.55);
+	background:
+		linear-gradient(170deg, rgb(255 255 165 / 0.18), transparent 45%),
+		var(--surface);
+	box-shadow: 4px 5px 0 rgb(14 42 92 / 0.09);
+	border-radius: 0.45rem;
+}
+
+/* Featured story — left margin accent */
+html[data-theme='sketch'] .featured-story {
+	border-left: 3px solid rgb(209 40 40 / 0.5);
+	background: var(--surface);
+	box-shadow: 4px 5px 0 rgb(14 42 92 / 0.08);
+}
+
+/* Story cards — hard pencil shadow */
+html[data-theme='sketch'] .story-card {
+	background: var(--surface);
+	border-color: rgb(14 42 92 / 0.18);
+	box-shadow: 3px 4px 0 rgb(14 42 92 / 0.09);
+}
+
+html[data-theme='sketch'] .story-card:hover {
+	transform: translateY(-2px) rotate(0.25deg);
+	box-shadow: 5px 6px 0 rgb(14 42 92 / 0.11);
+}
+
+/* Article shell — hard-offset shadow */
+html[data-theme='sketch'] .article-shell {
+	box-shadow: 5px 6px 0 rgb(14 42 92 / 0.09);
+}
+
+/* Section labels / eyebrows — arrow prefix (sketch doodle gesture) */
+html[data-theme='sketch'] .section-label::before,
+html[data-theme='sketch'] .eyebrow::before {
+	content: '→\00a0';
+	opacity: 0.65;
+}
+
+/* Buttons — hard-offset ink shadow consistent with card aesthetic.
+ * Overrides the base blurred glow shadow from components.css. */
+html[data-theme='sketch'] .btn-primary {
+	box-shadow: 3px 3px 0 rgb(14 42 92 / 0.18);
+}
+
+html[data-theme='sketch'] .btn-primary:hover {
+	box-shadow: 5px 5px 0 rgb(14 42 92 / 0.22);
+}
+
+html[data-theme='sketch'] .btn-ghost {
+	border-width: 1.5px;
+	box-shadow: 3px 3px 0 rgb(14 42 92 / 0.1);
+}
+
+html[data-theme='sketch'] .btn-ghost:hover {
+	box-shadow: 5px 5px 0 rgb(14 42 92 / 0.12);
+}
+
+/* Form inputs — hard-offset shadow; solid focus border replaces blurred ring */
+html[data-theme='sketch'] .field-input {
+	box-shadow: 2px 3px 0 rgb(14 42 92 / 0.08);
+}
+
+html[data-theme='sketch'] .field-input:focus {
+	box-shadow: 3px 3px 0 rgb(14 42 92 / 0.14);
+}
+
+/* Tags — hard border edge consistent with sketch squared aesthetic */
+html[data-theme='sketch'] .tag {
+	border-radius: 0.25rem;
+	border-width: 1.5px;
+}
+
+/* Skeleton — sketch-paper shimmer uses cream bg-accent, looks right already */
+/* Empty state icon — use accent red for the icon glow in sketch */
+html[data-theme='sketch'] .empty-state__icon {
+	opacity: 0.6;
+}
+
+/* Article prose — Patrick Hand reads best at slightly larger size */
+html[data-theme='sketch'] .article-prose {
+	font-size: 1.12rem;
+	line-height: 1.78;
+}
+
+html[data-theme='sketch'] .article-prose :where(h2, h3, h4) {
+	letter-spacing: -0.005em;
+}
+
+/* Inline code — yellow highlighter marker */
+html[data-theme='sketch'] .article-prose :where(code):not(pre code) {
+	background: rgb(255 255 165 / 0.65);
+	border-color: rgb(255 255 165 / 0.9);
+	color: var(--text);
+	box-shadow: none;
+	font-family: var(--font-sans);
+}
+
+/* Pre / code blocks — hard-offset box shadow to match card aesthetic */
+html[data-theme='sketch'] .article-prose :where(pre) {
+	border-color: rgb(14 42 92 / 0.18);
+	border-radius: 0.45rem;
+	box-shadow: 3px 4px 0 rgb(14 42 92 / 0.08);
+	background: rgb(244 241 234 / 0.95);
+}
+
+/*
+ * ================================================================
+ *  SKETCH THEME — DARK MODE ("Blackboard")
+ * ================================================================
+ *  Activated by:  html.dark[data-theme='sketch']
+ *
+ *  Design intent: Dark notebook / blackboard — near-black graphite
+ *  paper with chalk-white text, red chalk accent, and a very subtle
+ *  ruled-line grid. The Patrick Hand typography and hard-offset
+ *  shadows carry over, adapted to lighter-on-dark ink.
+ * ================================================================
+ */
+
+/* ------------------------------------------------------------------
+   §1  DESIGN TOKENS — DARK MODE
+   ------------------------------------------------------------------ */
+html.dark[data-theme='sketch'] {
+	color-scheme: dark;
+
+	/* Colors — graphite dark / chalk white / red chalk */
+	--bg: #1a1a18;
+	--bg-accent: #222220;
+	--surface: rgb(26 26 24 / 0.95);
+	--surface-strong: rgb(30 30 28 / 0.99);
+	--text: #e8eaf0; /* chalk white, slight blue tint */
+	--muted: rgb(232 234 240 / 0.5);
+	--border: rgb(232 234 240 / 0.12);
+	--accent: #e05555; /* brighter red chalk — visible on dark bg */
+	--accent-soft: rgb(224 85 85 / 0.12);
+	--quote: #8888ff; /* blue chalk on blackboard */
+	--code-bg: rgb(80 80 20 / 0.55); /* muted dark highlighter */
+	--hero-glow: transparent;
+	--selection: rgb(80 80 20 / 0.65); /* dark highlighter selection */
+
+	/* Typography — Patrick Hand everywhere, same as light */
+	--font-sans: 'Patrick Hand', cursive;
+	--font-serif: 'Patrick Hand', cursive;
+
+	/* Shape — same angular radius */
+	--radius: 0.45rem;
+
+	/* Shadow — inverted: lighter ink on dark surface */
+	--shadow-soft: 3px 4px 0 rgb(232 234 240 / 0.06);
+}
+
+/* ------------------------------------------------------------------
+   §2  COMPONENT ADJUSTMENTS — DARK MODE
+   ------------------------------------------------------------------ */
+
+/*
+ * Dark ruled-line background (chalk lines on dark paper/blackboard).
+ * Lighter line color on the dark bg — much more subtle than light mode.
+ */
+html.dark[data-theme='sketch'],
+html.dark[data-theme='sketch'] body {
+	background:
+		repeating-linear-gradient(
+			to bottom,
+			transparent,
+			transparent calc(1.6rem - 1px),
+			rgb(232 234 240 / 0.04) calc(1.6rem - 1px),
+			rgb(232 234 240 / 0.04) 1.6rem
+		),
+		#1a1a18;
+}
+
+/* Nav — solid dark paper; chalk-white border; lighter shadow */
+html.dark[data-theme='sketch'] .site-chrome {
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	background: rgb(24 24 22 / 0.98);
+	border: 1.5px solid rgb(232 234 240 / 0.15);
+	box-shadow: 3px 3px 0 rgb(232 234 240 / 0.06);
+}
+
+/* Brand mark — chalk-red underline */
+html.dark[data-theme='sketch'] .brand-mark {
+	text-decoration-color: rgb(224 85 85 / 0.55);
+}
+
+/* Active theme chip — red chalk fill with very dark text */
+html.dark[data-theme='sketch'] .theme-chip.active {
+	background: var(--accent);
+	color: #1a1a18;
+}
+
+/* Hero — dark margin stripe; yellow-tinted dark gradient */
+html.dark[data-theme='sketch'] .home-hero {
+	border-left-color: rgb(224 85 85 / 0.5);
+	background:
+		linear-gradient(170deg, rgb(80 80 20 / 0.2), transparent 45%),
+		var(--surface);
+	box-shadow: 4px 5px 0 rgb(232 234 240 / 0.05);
+}
+
+/* Featured story — dimmer chalk-red left stripe */
+html.dark[data-theme='sketch'] .featured-story {
+	border-left-color: rgb(224 85 85 / 0.45);
+	box-shadow: 4px 5px 0 rgb(232 234 240 / 0.05);
+}
+
+/* Story cards — chalk-ink shadow (lighter on dark) */
+html.dark[data-theme='sketch'] .story-card {
+	border-color: rgb(232 234 240 / 0.12);
+	box-shadow: 3px 4px 0 rgb(232 234 240 / 0.06);
+}
+
+html.dark[data-theme='sketch'] .story-card:hover {
+	box-shadow: 5px 6px 0 rgb(232 234 240 / 0.08);
+}
+
+/* Article shell — lighter chalk shadow */
+html.dark[data-theme='sketch'] .article-shell {
+	box-shadow: 5px 6px 0 rgb(232 234 240 / 0.06);
+}
+
+/* Inline code — muted dark highlighter (faded yellow on dark) */
+html.dark[data-theme='sketch'] .article-prose :where(code):not(pre code) {
+	background: rgb(80 80 20 / 0.55);
+	border-color: rgb(80 80 20 / 0.6);
+	color: var(--text);
+	box-shadow: none;
+}
+
+/* Pre / code blocks — dark notebook paper; lighter chalk shadow */
+html.dark[data-theme='sketch'] .article-prose :where(pre) {
+	border-color: rgb(232 234 240 / 0.12);
+	border-radius: 0.45rem;
+	box-shadow: 3px 4px 0 rgb(232 234 240 / 0.05);
+	background: rgb(20 20 18 / 0.95);
+}
+
+/* Buttons dark — chalk-white hard shadow (inverted from light ink shadow) */
+html.dark[data-theme='sketch'] .btn-primary {
+	box-shadow: 3px 3px 0 rgb(232 234 240 / 0.1);
+}
+
+html.dark[data-theme='sketch'] .btn-primary:hover {
+	box-shadow: 5px 5px 0 rgb(232 234 240 / 0.13);
+}
+
+html.dark[data-theme='sketch'] .btn-ghost {
+	box-shadow: 3px 3px 0 rgb(232 234 240 / 0.07);
+}
+
+html.dark[data-theme='sketch'] .btn-ghost:hover {
+	box-shadow: 5px 5px 0 rgb(232 234 240 / 0.09);
+}
+
+/* Form inputs dark — lighter chalk shadow */
+html.dark[data-theme='sketch'] .field-input {
+	box-shadow: 2px 3px 0 rgb(232 234 240 / 0.06);
+}
+
+html.dark[data-theme='sketch'] .field-input:focus {
+	box-shadow: 3px 3px 0 rgb(232 234 240 / 0.1);
+}
+
+/* Tags dark — hard border edge */
+html.dark[data-theme='sketch'] .tag {
+	border-radius: 0.25rem;
+	border-width: 1.5px;
+}

@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/*
+ * ================================================================
+ *  THEME TOKEN FILES
+ *  Each file owns its light + dark token block.
+ *  To add a new visual theme, create a new file in themes/ and
+ *  @import it here. No other files need to change.
+ * ================================================================
+ */
+@import './themes/paper.css';
+@import './themes/mono.css';
+@import './themes/sketch.css';
+
+/*
+ * ================================================================
+ *  BASE & COMPONENT STYLES
+ * ================================================================
+ */
+@import './base.css';
+@import './components.css';
+@import './responsive.css';
