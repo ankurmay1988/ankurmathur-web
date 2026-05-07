@@ -46,12 +46,12 @@
 				</a>
 			</h2>
 			<p>{featured.excerpt}</p>
-		</div>
 
-		<div class={ui.storyMeta}>
-			<span>{featured.category}</span>
-			<span>{featured.published}</span>
-			<span>{featured.readingTime}</span>
+			<div class={ui.storyMeta}>
+				<span>{featured.category}</span>
+				<span>{featured.published}</span>
+				<span>{featured.readingTime}</span>
+			</div>
 		</div>
 	</section>
 {/if}
