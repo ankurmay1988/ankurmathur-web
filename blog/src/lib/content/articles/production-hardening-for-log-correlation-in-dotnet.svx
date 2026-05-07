@@ -7,6 +7,10 @@
     readingTime: '12 min read',
     category: 'Backend',
     featured: false,
+    image: 'https://images.unsplash.com/photo-1581089778998-5266350efc71?w=1200&q=80&fit=crop',
+    imageAlt: 'Engineer examining flight data on a computer workstation',
+    heroImage: 'https://images.unsplash.com/photo-1581089778998-5266350efc71?w=1600&q=80&fit=crop',
+    heroImageAlt: 'Engineer examining flight data on a computer workstation',
     coverAlt: 'Operations dashboard with alerts, logs, and traces connected by a single correlation key',
     coverTone: 'amber'
   };

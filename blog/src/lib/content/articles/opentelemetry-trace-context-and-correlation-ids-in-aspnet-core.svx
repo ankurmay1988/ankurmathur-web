@@ -7,6 +7,10 @@
     readingTime: '10 min read',
     category: 'Backend',
     featured: false,
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80&fit=crop',
+    imageAlt: 'View of Earth from outer space with city lights representing distributed telemetry',
+    heroImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&q=80&fit=crop',
+    heroImageAlt: 'View of Earth from outer space with city lights representing distributed telemetry',
     coverAlt: 'Timeline diagram showing spans and correlated log lines across services',
     coverTone: 'indigo'
   };

@@ -7,6 +7,10 @@
     readingTime: '5 min read',
     category: 'Essays',
     featured: true,
+    image: 'https://images.unsplash.com/photo-1654542645651-5196f4931cd6?w=1200&q=80&fit=crop',
+    imageAlt: 'Green journal notebook placed on a wooden table',
+    heroImage: 'https://images.unsplash.com/photo-1654542645651-5196f4931cd6?w=1600&q=80&fit=crop',
+    heroImageAlt: 'Green journal notebook placed on a wooden table',
     coverAlt: 'Warm paper with editorial margin notes',
     coverTone: 'amber'
   };
