@@ -19,6 +19,7 @@ html[data-theme='mono'] {
 	--code-bg: rgb(17 17 17 / 0.05);
 	--hero-glow: rgb(17 17 17 / 0.14);
 	--selection: rgb(17 17 17 / 0.14);
+	--radius: 0.75rem;
 }
 
 html.dark[data-theme='mono'] {
@@ -35,6 +36,7 @@ html.dark[data-theme='mono'] {
 	--code-bg: rgb(243 243 241 / 0.1);
 	--hero-glow: rgb(243 243 241 / 0.12);
 	--selection: rgb(243 243 241 / 0.16);
+	--radius: 0.75rem;
 }
 
 /* Image containers — crisper, higher-contrast borders matching mono's strict aesthetic */

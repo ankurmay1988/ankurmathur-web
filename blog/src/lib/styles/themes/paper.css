@@ -7,12 +7,13 @@
  */
 
 :root {
+	font-size: 16px;
 	color-scheme: light;
 	--font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', sans-serif;
 	--font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
 	--page-max: 76rem;
 	--article-max: 68ch;
-	--radius: 1.5rem;
+	--radius: 0.75rem;
 	--shadow-soft: 0 24px 80px rgb(15 23 42 / 0.08);
 	--bg: #f6f1e8;
 	--bg-accent: #efe5d6;

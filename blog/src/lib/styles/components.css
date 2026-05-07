@@ -178,8 +178,6 @@
 /* ── Shared card base ─────────────────────────────────────────── */
 
 .home-hero,
-.featured-story,
-.story-card,
 .article-shell {
 	background: var(--surface);
 	border: 1px solid var(--border);
@@ -201,8 +199,6 @@
 }
 
 .home-hero h1,
-.featured-story h2,
-.story-card h2,
 .article-header h1 {
 	margin: 0;
 	font-family: var(--font-serif);
@@ -223,101 +219,378 @@
 	color: var(--muted);
 }
 
-/* ── Featured story ───────────────────────────────────────────── */
+/* ── Card tags ────────────────────────────────────────────────── */
 
-.featured-story {
-	align-items: stretch;
+.card-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.22em 0.72em;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	line-height: 1;
+	background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+	color: var(--accent);
+	border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
 }
 
-.featured-media {
-	position: relative;
-	isolation: isolate;
-	border-radius: var(--radius);
-	border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-	background:
-		radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
-		color-mix(in srgb, var(--surface-strong) 95%, transparent);
+.card-tag--on-image {
+	background: color-mix(in srgb, black 38%, transparent);
+	color: #fff;
+	border-color: color-mix(in srgb, white 22%, transparent);
+	backdrop-filter: blur(8px);
 }
 
-.featured-media::after {
+/* ── Card meta (date + reading time) ─────────────────────────── */
+
+.card-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-size: 0.8rem;
+	color: var(--muted);
+	flex-wrap: wrap;
+}
+
+.card-meta--light {
+	color: color-mix(in srgb, white 82%, transparent);
+}
+
+.card-meta__dot {
+	display: inline-block;
+	width: 0.22rem;
+	height: 0.22rem;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.55;
+}
+
+/* ── Home grid ────────────────────────────────────────────────── */
+
+/* ── Section header (eyebrow label above a section) ──────────── */
+
+.section-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.65rem;
+}
+
+.section-header::after {
 	content: '';
-	position: absolute;
-	inset: auto 0 0;
-	height: 30%;
-	background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 26%, transparent));
-	pointer-events: none;
+	flex: 1;
+	height: 1px;
+	background: var(--border);
+	opacity: 0.6;
 }
 
-.featured-media img {
+.section-header__label {
+	flex-shrink: 0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+/* ── Landing hero: Featured + Top Posts side-by-side ─────────── */
+
+.landing-hero {
+	display: grid;
+	grid-template-columns: 1.5fr 1fr;
+	gap: 1.25rem;
+	align-items: start;
+	margin-left: 2rem;
+	margin-right: 2rem;
+}
+
+.featured-section,
+.top-posts-section {
+	display: flex;
+	flex-direction: column;
+}
+
+/* ── Top posts list ───────────────────────────────────────────── */
+
+.top-posts-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.55rem;
+	flex: 1;
+}
+
+/* ── Mini card (small landscape: square image + text right) ───── */
+
+.mini-card {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow-soft);
+	transition: box-shadow 200ms ease;
+	min-height: 5.2rem;
+	cursor: pointer;
+	text-decoration: none;
+	color: inherit;
+}
+
+.mini-card:hover {
+	box-shadow:
+		var(--shadow-soft),
+		0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.mini-card__image {
+	width: 5.2rem;
+	flex-shrink: 0;
+	position: relative;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.mini-card__image img {
 	display: block;
 	width: 100%;
 	height: 100%;
-	min-height: 17rem;
 	object-fit: cover;
-	transition: transform 320ms ease;
+	transition: transform 260ms ease;
 }
 
-.featured-story:hover .featured-media img {
-	transform: scale(1.03);
+.mini-card:hover .mini-card__image img {
+	transform: scale(1.06);
 }
 
-.featured-story h2,
-.story-card h2 {
-	font-size: clamp(2rem, 4vw, 3rem);
-	margin-top: 0.55rem;
-	margin-bottom: 0.9rem;
+.mini-card__body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0.55rem 0.75rem 0.6rem;
+	gap: 0.25rem;
+	min-width: 0;
 }
 
-.featured-story p,
-.story-card p,
+.mini-card__title {
+	margin: 0;
+	font-family: var(--font-serif);
+	font-weight: 500;
+	font-size: 0.88rem;
+	line-height: 1.28;
+	letter-spacing: -0.01em;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	color: var(--text);
+}
+
+.mini-card__title a {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.mini-card__title a:hover {
+	color: var(--accent);
+}
+
+/* ── Story grid (remaining articles) ─────────────────────────── */
+
+.story-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 1.25rem;
+	margin-top: 1.5rem;
+	margin-left: 2rem;
+	margin-right: 2rem;
+}
+
+/* ── Featured card ────────────────────────────────────────────── */
+
+.featured-card {
+	display: block;
+	position: relative;
+	aspect-ratio: 16 / 10;
+	border-radius: calc(var(--radius) + 0.25rem);
+	overflow: hidden;
+	border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	box-shadow: var(--shadow-soft);
+	cursor: pointer;
+	isolation: isolate;
+}
+
+/* Film grain layer — SVG feTurbulence noise baked into a data URI.
+   mix-blend-mode: overlay adds analog texture without washing color. */
+.featured-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+	opacity: 0.28;
+	mix-blend-mode: overlay;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+	background-size: 256px 256px;
+}
+
+.featured-card__bg {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.featured-card:hover .featured-card__bg {
+	transform: scale(1.05);
+}
+
+/* Lightweight scrim — just enough to anchor the top tag and fade to footer */
+.featured-card__overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	background: linear-gradient(
+		to top,
+		hsl(0 0% 0% / 0.55) 0%,
+		hsl(0 0% 0% / 0.12) 38%,
+		transparent 62%
+	);
+}
+
+.featured-card__top {
+	display: flex;
+	align-items: flex-start;
+	padding: 1.1rem 1.25rem 0;
+}
+
+/* Frosted-glass footer strip — the key editorial device */
+.featured-card__footer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1rem 1.25rem 1.15rem;
+	background: hsl(0 0% 0% / 0.28);
+	backdrop-filter: blur(18px) saturate(0.75);
+	-webkit-backdrop-filter: blur(18px) saturate(0.75);
+	border-top: 1px solid hsl(0 0% 100% / 0.09);
+}
+
+.featured-card__title {
+	margin: 0;
+	font-family: var(--font-serif);
+	font-weight: 500;
+	font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+	line-height: 1.12;
+	letter-spacing: -0.025em;
+	color: #fff;
+	text-shadow:
+		0 1px 3px hsl(0 0% 0% / 0.4),
+		0 2px 8px hsl(0 0% 0% / 0.2);
+}
+
+.featured-card__title a {
+	color: #fff;
+	text-decoration: none;
+	text-shadow:
+		0 1px 3px hsl(0 0% 0% / 0.4),
+		0 2px 8px hsl(0 0% 0% / 0.2);
+}
+
+.featured-card__title a:hover {
+	text-decoration: underline;
+	text-decoration-color: hsl(0 0% 100% / 0.45);
+}
+
+/* ── Story grid cards (portrait) ──────────────────────────────── */
+
+.story-card {
+	display: flex;
+	flex-direction: column;
+	border-radius: calc(var(--radius) + 0.25rem);
+	overflow: hidden;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow-soft);
+	backdrop-filter: blur(18px);
+	min-height: 16rem;
+	cursor: pointer;
+	text-decoration: none;
+	color: inherit;
+}
+
+.story-card__image {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	flex-shrink: 0;
+	background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.story-card__image img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 280ms ease;
+}
+
+.story-card:hover .story-card__image img {
+	transform: scale(1.04);
+}
+
+.story-card__image .card-tag {
+	position: absolute;
+	top: 0.7rem;
+	left: 0.7rem;
+}
+
+.story-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1rem 1.1rem 1.2rem;
+	flex: 1;
+	justify-content: flex-end;
+}
+
+.story-card__title {
+	margin: 0;
+	font-family: var(--font-serif);
+	font-weight: 500;
+	font-size: clamp(1rem, 1.4vw, 1.2rem);
+	line-height: 1.22;
+	letter-spacing: -0.02em;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+	color: var(--text);
+}
+
+.story-card__title a {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.story-card__title a:hover {
+	color: var(--accent);
+}
+
 .article-dek {
 	margin: 0;
 	color: var(--muted);
 	font-size: 1.02rem;
-}
-
-/* ── Story grid ───────────────────────────────────────────────── */
-
-.story-grid {
-}
-
-.story-card {
-	background:
-		linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--accent-soft) 70%, transparent),
-			transparent 45%
-		),
-		var(--surface);
-}
-
-.story-card-image {
-	position: relative;
-	border-radius: var(--radius);
-	border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
-	background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
-}
-
-.story-card-image img {
-	display: block;
-	width: 100%;
-	aspect-ratio: 16 / 9;
-	object-fit: cover;
-	transition: transform 240ms ease;
-}
-
-.story-card:hover .story-card-image img {
-	transform: scale(1.035);
-}
-
-.story-card[data-tone='slate'] {
-	background:
-		linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--accent-soft) 48%, transparent),
-			transparent 38%
-		),
-		var(--surface);
 }
 
 .story-meta,

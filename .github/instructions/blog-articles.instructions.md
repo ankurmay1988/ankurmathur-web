@@ -30,7 +30,10 @@ The implemented blog currently uses a module export named `metadata` from each a
     readingTime: '5 min read',
     category: 'Notes',
     featured: false,
-    coverAlt: 'Short visual description',
+    image: '/images/articles/my-article-card.webp',
+    imageAlt: 'Short description of the card image',
+    heroImage: '/images/articles/my-article-hero.webp',
+    heroImageAlt: 'Short description of the hero image',
     coverTone: 'amber'
   };
 </script>
@@ -42,20 +45,27 @@ Written content starts here.
 
 Current expected metadata fields are:
 
-- `title`
-- `excerpt`
-- `published`
-- `readingTime`
-- `category`
-- `featured`
-- `coverAlt`
-- `coverTone`
+| Field | Required | Description |
+|-------|----------|-------------|
+| `title` | yes | Article headline |
+| `excerpt` | yes | Short description for cards and `<meta>` |
+| `published` | yes | Date string — `YYYY-MM-DD` |
+| `readingTime` | yes | Human-readable string, e.g. `'8 min read'` |
+| `category` | yes | Category label displayed on cards |
+| `featured` | yes | `true` marks as homepage featured article |
+| `image` | recommended | Card thumbnail path (16:9). Falls back to default SVG. |
+| `imageAlt` | recommended | Alt text for `image` |
+| `heroImage` | optional | Full-width article hero (21:9). Falls back to `image`, then default SVG. |
+| `heroImageAlt` | optional | Alt text for `heroImage`. Falls back to `imageAlt`. |
+| `coverTone` | optional | Color hint for card placeholder rendering |
+| `coverAlt` | **deprecated** | Legacy alias for `imageAlt`/`heroImageAlt`. Use explicit fields instead. |
 
 Notes:
 
 - `published` should be a valid date string such as `YYYY-MM-DD`
 - `featured: true` marks the article for homepage featuring
 - `src/lib/articles.ts` provides fallbacks for several fields, but future content should still set them explicitly
+- `coverAlt` is preserved for backward compatibility; prefer `imageAlt` and `heroImageAlt` in new articles
 
 ## Svelte Components Inside Markdown (`.svx` / `.md`)
 
@@ -100,7 +110,10 @@ In Svelte 5 runes mode, `context="module"` is replaced by `<script module>`. In 
     readingTime: '5 min read',
     category: 'Notes',
     featured: false,
-    coverAlt: 'Short visual description',
+    image: '/images/articles/my-article-card.webp',
+    imageAlt: 'Short description of the card image',
+    heroImage: '/images/articles/my-article-hero.webp',
+    heroImageAlt: 'Short description of the hero image',
     coverTone: 'amber'
   };
 </script>
@@ -121,7 +134,8 @@ If you need article-level interactive components as well, add a second instance 
     readingTime: '6 min read',
     category: 'Notes',
     featured: false,
-    coverAlt: 'Short visual description',
+    image: '/images/articles/interactive-article-card.webp',
+    imageAlt: 'Short description of the card image',
     coverTone: 'amber'
   };
 </script>

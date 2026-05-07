@@ -1,94 +1,67 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
+	import FeaturedCard from '$lib/components/FeaturedCard.svelte';
+	import MiniCard from '$lib/components/MiniCard.svelte';
+	import StoryCard from '$lib/components/StoryCard.svelte';
 
 	let { data }: PageProps = $props();
 
 	let featured = $derived(data.featured);
+	let topArticles = $derived(data.topArticles);
+	let topSlugs = $derived(new Set(topArticles.map((a) => a.slug)));
 	let articles = $derived(
-		featured ? data.articles.filter((article) => article.slug !== featured.slug) : data.articles
+		data.articles.filter((a) => a.slug !== featured?.slug && !topSlugs.has(a.slug))
 	);
-
-	const ui = {
-		featuredStory:
-			'featured-story grid gap-6 rounded-3xl p-6 md:grid-cols-3',
-		featuredMedia: 'featured-media overflow-hidden md:col-span-1',
-		storyMeta: 'story-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',
-		storyGrid: 'story-grid grid grid-cols-2 gap-6 max-md:grid-cols-1',
-		storyCard: 'story-card grid min-h-72 content-start gap-4 rounded-3xl p-6',
-		storyImage: 'story-card-image -mx-2 -mt-2 overflow-hidden'
-	} as const;
 </script>
 
 <svelte:head>
-	<title>Ankur Mathur Journal</title>
-	<meta
-		name="description"
-		content="A minimal editorial blog with switchable themes, dark mode, and markdown-first article layouts."
-	/>
+<title>Ankur Mathur Journal</title>
+<meta
+name="description"
+content="A minimal editorial blog with switchable themes, dark mode, and markdown-first article layouts."
+/>
 </svelte:head>
 
-<!-- <section class="home-hero">
-	<p class="eyebrow">Independent notes on building, writing, and interface craft</p>
-	<h1>Calm reading surfaces for essays, field notes, and working drafts.</h1>
-	<p class="hero-copy">
-		This publication borrows the restraint of classic editorial layouts and keeps the chrome out of
-		the way. The result is a markdown-first shell that can switch personality without rebuilding the
-		reading experience.
-	</p>
-</section> -->
-
-{#if featured}
-	<section class={ui.featuredStory}>
-		<div class="min-w-0 md:col-span-2">
-			<p class="section-label">Featured story</p>
-			<h2>
-				<a href={resolve('/articles/[articleSlug]', { articleSlug: featured.slug })}>
-					{featured.title}
-				</a>
-			</h2>
-			<p>{featured.excerpt}</p>
-
-			<div class={ui.storyMeta}>
-				<span>{featured.category}</span>
-				<span>{featured.published}</span>
-				<span>{featured.readingTime}</span>
-			</div>
-		</div>
-
-		<figure class={ui.featuredMedia}>
-			<img
-				src={resolve(featured.image)}
-				alt={featured.imageAlt}
-				loading="eager"
-				decoding="async"
+<!-- ── Hero strip: Featured + Top Posts ───────────────────────── -->
+<div class="landing-hero">
+	{#if featured}
+		<section class="featured-section" aria-label="Featured article">
+			<header class="section-header">
+				<span class="section-header__label">Featured</span>
+			</header>
+			<FeaturedCard
+				article={featured}
+				href={resolve('/articles/[articleSlug]', { articleSlug: featured.slug })}
 			/>
-		</figure>
+		</section>
+	{/if}
+
+	{#if topArticles.length > 0}
+		<section class="top-posts-section" aria-label="Top posts">
+			<header class="section-header">
+				<span class="section-header__label">Top Posts</span>
+			</header>
+			<div class="top-posts-list">
+				{#each topArticles as article (article.slug)}
+					<MiniCard
+						{article}
+						href={resolve('/articles/[articleSlug]', { articleSlug: article.slug })}
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
+</div>
+
+<!-- ── Remaining articles grid ────────────────────────────────── -->
+{#if articles.length > 0}
+	<section class="story-grid" aria-label="More articles">
+		{#each articles as article (article.slug)}
+			<StoryCard
+				{article}
+				href={resolve('/articles/[articleSlug]', { articleSlug: article.slug })}
+			/>
+		{/each}
 	</section>
 {/if}
-
-<section class={ui.storyGrid} aria-label="Article list">
-	{#each articles as article (article.slug)}
-		<article class={ui.storyCard} data-tone={article.coverTone}>
-			<figure class={ui.storyImage}>
-				<img
-					src={resolve(article.image)}
-					alt={article.imageAlt}
-					loading="lazy"
-					decoding="async"
-				/>
-			</figure>
-			<p class="section-label">{article.category}</p>
-			<h2>
-				<a href={resolve('/articles/[articleSlug]', { articleSlug: article.slug })}>
-					{article.title}
-				</a>
-			</h2>
-			<p>{article.excerpt}</p>
-			<div class={ui.storyMeta}>
-				<span>{article.published}</span>
-				<span>{article.readingTime}</span>
-			</div>
-		</article>
-	{/each}
-</section>

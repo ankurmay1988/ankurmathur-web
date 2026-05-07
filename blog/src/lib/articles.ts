@@ -100,6 +100,12 @@ export function getFeaturedArticle() {
 	);
 }
 
+export function getTopArticles(count: number = 4, excludeSlug?: string) {
+	return listArticleSummaries()
+		.filter((article) => article.slug !== excludeSlug)
+		.slice(0, count);
+}
+
 export function getArticleSummaryBySlug(slug: string) {
 	return listArticleSummaries().find((article) => article.slug === slug) ?? null;
 }
