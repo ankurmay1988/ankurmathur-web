@@ -69,22 +69,46 @@
 
 .mode-toggle,
 .system-toggle {
+	display: grid;
+	place-items: center;
+	width: 2.65rem;
+	height: 2.65rem;
+	border-radius: 999px;
+	border: 1px solid transparent;
 	background: color-mix(in srgb, var(--accent-soft) 78%, transparent);
 	color: var(--text);
 }
 
 .mode-toggle {
+	position: relative;
+	overflow: hidden;
+	padding: 0.2rem;
+	width: 3.45rem;
 	background: color-mix(in srgb, var(--accent-soft) 64%, var(--surface-strong));
 }
 
-.mode-toggle__track {
+.toggle-slider__track {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 999px;
 	background: transparent;
 }
 
-.mode-toggle__thumb {
+.toggle-slider__thumb {
+	position: absolute;
+	top: 50%;
+	left: 0.14rem;
+	display: grid;
+	place-items: center;
+	width: 1.8rem;
+	height: 1.8rem;
+	border-radius: 999px;
 	background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
 	color: var(--text);
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 72%, transparent);
+	transform: translate3d(0, -50%, 0);
 	transition:
 		transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
 		background-color 180ms ease,
@@ -99,11 +123,11 @@
 	fill: currentColor;
 }
 
-.mode-toggle__thumb svg {
+.toggle-slider__thumb svg {
 	transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.mode-toggle.active {
+.mode-toggle[data-active='true'] {
 	background: var(--text);
 	color: var(--bg);
 	border-color: color-mix(in srgb, var(--text) 75%, transparent);
@@ -112,18 +136,18 @@
 		inset 0 0 0 1px color-mix(in srgb, var(--bg) 18%, transparent);
 }
 
-.mode-toggle.is-dark .mode-toggle__thumb {
+.mode-toggle[data-checked='true'] .toggle-slider__thumb {
 	transform: translate3d(1.17rem, -50%, 0);
 	color: var(--text);
 }
 
-.mode-toggle.active .mode-toggle__thumb {
+.mode-toggle[data-active='true'] .toggle-slider__thumb {
 	background: color-mix(in srgb, var(--bg) 90%, transparent);
 	color: var(--text);
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 18%, transparent);
 }
 
-.mode-toggle.is-dark .mode-toggle__thumb svg {
+.mode-toggle[data-checked='true'] .toggle-slider__thumb svg {
 	transform: rotate(180deg);
 }
 
