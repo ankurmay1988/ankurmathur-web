@@ -11,7 +11,7 @@
 
 	const ui = {
 		articleShell:
-			'article-shell mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6 rounded-3xl px-4 py-6 md:px-8 md:py-10',
+			'article-shell mx-auto flex w-full min-w-0 flex-col gap-6 rounded-3xl px-4 py-6 md:px-8 md:py-10',
 		articleHeader:
 			'article-header flex max-w-full min-w-0 flex-col gap-4 border-b border-(--border) pb-4',
 		articleMeta: 'article-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',

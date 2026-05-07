@@ -23,7 +23,7 @@
 
 	const ui = {
 		shell:
-			'theme-shell mx-auto box-border w-full max-w-7xl px-4 pt-4 pb-16 md:pt-6',
+			'theme-shell mx-auto box-border w-full max-w-7xl px-4 pt-4 pb-16 md:pt-6 2xl:max-w-screen-2xl',
 		siteChrome:
 			'site-chrome sticky top-4 z-10 mb-8 flex items-center justify-between gap-4 px-4 py-4 max-md:static max-md:flex-col max-md:items-start',
 		themeControls: 'theme-controls flex flex-wrap items-center gap-4 max-md:w-full max-md:justify-between',
