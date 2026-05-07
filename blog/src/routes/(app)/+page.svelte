@@ -12,9 +12,11 @@
 	const ui = {
 		featuredStory:
 			'featured-story grid gap-6 rounded-3xl p-6 md:grid-cols-3',
+		featuredMedia: 'featured-media overflow-hidden md:col-span-1',
 		storyMeta: 'story-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',
 		storyGrid: 'story-grid grid grid-cols-2 gap-6 max-md:grid-cols-1',
-		storyCard: 'story-card grid min-h-72 content-start gap-4 rounded-3xl p-6'
+		storyCard: 'story-card grid min-h-72 content-start gap-4 rounded-3xl p-6',
+		storyImage: 'story-card-image -mx-2 -mt-2 overflow-hidden'
 	} as const;
 </script>
 
@@ -53,12 +55,29 @@
 				<span>{featured.readingTime}</span>
 			</div>
 		</div>
+
+		<figure class={ui.featuredMedia}>
+			<img
+				src={resolve(featured.image)}
+				alt={featured.imageAlt}
+				loading="eager"
+				decoding="async"
+			/>
+		</figure>
 	</section>
 {/if}
 
 <section class={ui.storyGrid} aria-label="Article list">
 	{#each articles as article (article.slug)}
 		<article class={ui.storyCard} data-tone={article.coverTone}>
+			<figure class={ui.storyImage}>
+				<img
+					src={resolve(article.image)}
+					alt={article.imageAlt}
+					loading="lazy"
+					decoding="async"
+				/>
+			</figure>
 			<p class="section-label">{article.category}</p>
 			<h2>
 				<a href={resolve('/articles/[articleSlug]', { articleSlug: article.slug })}>

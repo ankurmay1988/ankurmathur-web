@@ -15,6 +15,7 @@
 		articleHeader:
 			'article-header flex max-w-full min-w-0 flex-col gap-4 border-b border-(--border) pb-4',
 		articleMeta: 'article-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',
+		articleHero: 'article-hero overflow-hidden',
 		articleProse: 'article-prose prose w-full max-w-none text-lg leading-8 max-md:text-base'
 	} as const;
 </script>
@@ -35,6 +36,14 @@
 			<span>{data.article.published}</span>
 			<span>{data.article.readingTime}</span>
 		</div>
+		<figure class={ui.articleHero}>
+			<img
+				src={resolve(data.article.heroImage)}
+				alt={data.article.heroImageAlt}
+				loading="eager"
+				decoding="async"
+			/>
+		</figure>
 	</header>
 
 	{#if ArticleComponent}

@@ -226,6 +226,39 @@
 /* ── Featured story ───────────────────────────────────────────── */
 
 .featured-story {
+	align-items: stretch;
+}
+
+.featured-media {
+	position: relative;
+	isolation: isolate;
+	border-radius: var(--radius);
+	border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+	background:
+		radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
+		color-mix(in srgb, var(--surface-strong) 95%, transparent);
+}
+
+.featured-media::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0;
+	height: 30%;
+	background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 26%, transparent));
+	pointer-events: none;
+}
+
+.featured-media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 17rem;
+	object-fit: cover;
+	transition: transform 320ms ease;
+}
+
+.featured-story:hover .featured-media img {
+	transform: scale(1.03);
 }
 
 .featured-story h2,
@@ -256,6 +289,25 @@
 			transparent 45%
 		),
 		var(--surface);
+}
+
+.story-card-image {
+	position: relative;
+	border-radius: var(--radius);
+	border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+	background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+}
+
+.story-card-image img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	transition: transform 240ms ease;
+}
+
+.story-card:hover .story-card-image img {
+	transform: scale(1.035);
 }
 
 .story-card[data-tone='slate'] {
@@ -292,6 +344,30 @@
 
 .article-dek {
 	max-width: 86ch;
+}
+
+.article-hero {
+	position: relative;
+	margin-top: 0.45rem;
+	border-radius: var(--radius);
+	border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+	background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.article-hero::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0;
+	height: 28%;
+	background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 24%, transparent));
+	pointer-events: none;
+}
+
+.article-hero img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 21 / 9;
+	object-fit: cover;
 }
 
 /* ── Article prose ────────────────────────────────────────────── */

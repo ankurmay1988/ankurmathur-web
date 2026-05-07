@@ -8,20 +8,25 @@ export type ArticleSummary = {
 	readingTime: string;
 	category: string;
 	featured: boolean;
+	coverTone: string;
+	image: string;
+	imageAlt: string;
+	heroImage: string;
+	heroImageAlt: string;
+};
+
+type ArticleMetadata = Partial<ArticleSummary> & {
 	coverAlt?: string;
-	coverTone?: string;
 };
 
 type ArticleModule = {
 	default: Component;
-	metadata?: Partial<ArticleSummary>;
+	metadata?: ArticleMetadata;
 };
 
-type ArticleRecord = Omit<ArticleSummary, 'coverAlt' | 'coverTone'> & {
+type ArticleRecord = ArticleSummary & {
 	publishedAt: string;
 	component: Component;
-	coverAlt: string;
-	coverTone: string;
 };
 
 const articleModules = import.meta.glob('./content/articles/*.{md,svx}', {
@@ -34,8 +39,11 @@ const fallbackSummary = {
 	readingTime: '4 min read',
 	category: 'Notes',
 	featured: false,
-	coverAlt: 'Abstract editorial texture',
-	coverTone: 'amber'
+	coverTone: 'amber',
+	image: '/images/articles/default-card-coder.svg',
+	imageAlt: 'Illustration of a coder working at a laptop',
+	heroImage: '/images/articles/default-hero-coder.svg',
+	heroImageAlt: 'Wide illustration of a programmer working late at a desk'
 } satisfies Omit<ArticleSummary, 'slug' | 'title'>;
 
 const articles: ArticleRecord[] = Object.entries(articleModules)
@@ -61,8 +69,12 @@ const articles: ArticleRecord[] = Object.entries(articleModules)
 			readingTime: metadata.readingTime ?? fallbackSummary.readingTime,
 			category: metadata.category ?? fallbackSummary.category,
 			featured: metadata.featured ?? fallbackSummary.featured,
-			coverAlt: metadata.coverAlt ?? fallbackSummary.coverAlt,
 			coverTone: metadata.coverTone ?? fallbackSummary.coverTone,
+			image: metadata.image ?? fallbackSummary.image,
+			imageAlt: metadata.imageAlt ?? metadata.coverAlt ?? fallbackSummary.imageAlt,
+			heroImage: metadata.heroImage ?? metadata.image ?? fallbackSummary.heroImage,
+			heroImageAlt:
+				metadata.heroImageAlt ?? metadata.imageAlt ?? metadata.coverAlt ?? fallbackSummary.heroImageAlt,
 			component: module.default
 		};
 	})

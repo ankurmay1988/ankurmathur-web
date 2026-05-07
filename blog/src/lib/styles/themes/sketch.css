@@ -128,6 +128,32 @@ html[data-theme='sketch'] .story-card:hover {
 	box-shadow: 5px 6px 0 rgb(14 42 92 / 0.11);
 }
 
+/* Story card image — angular corners, ink border, hard-offset shadow */
+html[data-theme='sketch'] .story-card-image {
+	border-width: 1.5px;
+	border-color: rgb(14 42 92 / 0.22);
+	box-shadow: 2px 3px 0 rgb(14 42 92 / 0.09);
+}
+
+/* Featured media — ink border, hard-offset shadow */
+html[data-theme='sketch'] .featured-media {
+	border-width: 1.5px;
+	border-color: rgb(14 42 92 / 0.22);
+	box-shadow: 3px 4px 0 rgb(14 42 92 / 0.09);
+	background: var(--surface);
+}
+
+/* Article hero — ink border, hard-offset shadow, no gradient fade */
+html[data-theme='sketch'] .article-hero {
+	border-width: 1.5px;
+	border-color: rgb(14 42 92 / 0.22);
+	box-shadow: 4px 5px 0 rgb(14 42 92 / 0.09);
+}
+
+html[data-theme='sketch'] .article-hero::after {
+	display: none;
+}
+
 /* Article shell — hard-offset shadow */
 html[data-theme='sketch'] .article-shell {
 	box-shadow: 5px 6px 0 rgb(14 42 92 / 0.09);

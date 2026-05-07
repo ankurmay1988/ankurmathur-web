@@ -36,3 +36,18 @@ html.dark[data-theme='mono'] {
 	--hero-glow: rgb(243 243 241 / 0.12);
 	--selection: rgb(243 243 241 / 0.16);
 }
+
+/* Image containers — crisper, higher-contrast borders matching mono's strict aesthetic */
+html[data-theme='mono'] .story-card-image,
+html[data-theme='mono'] .featured-media,
+html[data-theme='mono'] .article-hero {
+	border-color: rgb(17 17 17 / 0.2);
+	border-width: 1.5px;
+}
+
+html.dark[data-theme='mono'] .story-card-image,
+html.dark[data-theme='mono'] .featured-media,
+html.dark[data-theme='mono'] .article-hero {
+	border-color: rgb(243 243 241 / 0.22);
+	border-width: 1.5px;
+}
