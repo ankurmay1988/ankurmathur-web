@@ -50,6 +50,11 @@ Runes mode is **forced** for all non-library files via `svelte.config.js`. Alway
   @plugin '@tailwindcss/typography';
   ```
 - Do **not** create a `tailwind.config.js` — configuration is done via CSS `@theme` blocks if needed
+- For Svelte route/component markup, use Tailwind utilities as the default for **layout and structure** (container sizing, display/grid/flex, gaps, spacing, responsive behavior, width/height, typography scale)
+- In blog routes, prefer standard Tailwind scale classes (`p-4`, `gap-6`, `rounded-3xl`, `text-sm`, `max-w-4xl`, etc.) over arbitrary utilities (`[ ... ]`) for spacing/sizing/typography unless there is a proven hard requirement
+- Keep raw CSS in `src/lib/styles/` focused on theme look-and-feel (tokens, color treatments, shadows, decorative backgrounds, code styling), not structural layout rules for route markup
+- In CSS-grid layouts, apply `min-w-0` to grid children (or parent utility `*:min-w-0`) to avoid intrinsic-width overflow and horizontal scrolling
+- When class lists become long, extract them into local `const ui = { ... } as const` class maps in the Svelte file for readability while still using Tailwind utilities
 
 ## Cloudflare Workers Integration
 

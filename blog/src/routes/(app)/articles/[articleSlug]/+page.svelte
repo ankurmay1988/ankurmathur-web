@@ -8,6 +8,15 @@
 	let slug = $derived(params.articleSlug);
 	let articleRecord = $derived(getArticleBySlug(slug));
 	let ArticleComponent = $derived(articleRecord?.component ?? null);
+
+	const ui = {
+		articleShell:
+			'article-shell mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6 rounded-3xl px-4 py-6 md:px-8 md:py-10',
+		articleHeader:
+			'article-header flex max-w-full min-w-0 flex-col gap-4 border-b border-(--border) pb-4',
+		articleMeta: 'article-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',
+		articleProse: 'article-prose prose w-full max-w-none text-lg leading-8 max-md:text-base'
+	} as const;
 </script>
 
 <svelte:head>
@@ -15,21 +24,21 @@
 	<meta name="description" content={data.article.excerpt} />
 </svelte:head>
 
-<article class="article-shell">
-	<a class="back-link" href={resolve('/')}>Back to all writing</a>
+<article class={ui.articleShell}>
+	<a class="back-link w-fit" href={resolve('/')}>Back to all writing</a>
 
-	<header class="article-header">
+	<header class={ui.articleHeader}>
 		<p class="eyebrow">{data.article.category}</p>
 		<h1>{data.article.title}</h1>
 		<p class="article-dek">{data.article.excerpt}</p>
-		<div class="article-meta">
+		<div class={ui.articleMeta}>
 			<span>{data.article.published}</span>
 			<span>{data.article.readingTime}</span>
 		</div>
 	</header>
 
 	{#if ArticleComponent}
-		<div class="article-prose prose">
+		<div class={ui.articleProse}>
 			<ArticleComponent />
 		</div>
 	{/if}

@@ -8,6 +8,14 @@
 	let articles = $derived(
 		featured ? data.articles.filter((article) => article.slug !== featured.slug) : data.articles
 	);
+
+	const ui = {
+		featuredStory:
+			'featured-story grid gap-6 rounded-3xl p-6 md:grid-cols-3',
+		storyMeta: 'story-meta flex flex-wrap gap-x-4 gap-y-4 text-sm',
+		storyGrid: 'story-grid grid grid-cols-2 gap-6 max-md:grid-cols-1',
+		storyCard: 'story-card grid min-h-72 content-start gap-4 rounded-3xl p-6'
+	} as const;
 </script>
 
 <svelte:head>
@@ -29,8 +37,8 @@
 </section> -->
 
 {#if featured}
-	<section class="featured-story">
-		<div>
+	<section class={ui.featuredStory}>
+		<div class="min-w-0 md:col-span-2">
 			<p class="section-label">Featured story</p>
 			<h2>
 				<a href={resolve('/articles/[articleSlug]', { articleSlug: featured.slug })}>
@@ -40,7 +48,7 @@
 			<p>{featured.excerpt}</p>
 		</div>
 
-		<div class="story-meta">
+		<div class={ui.storyMeta}>
 			<span>{featured.category}</span>
 			<span>{featured.published}</span>
 			<span>{featured.readingTime}</span>
@@ -48,9 +56,9 @@
 	</section>
 {/if}
 
-<section class="story-grid" aria-label="Article list">
+<section class={ui.storyGrid} aria-label="Article list">
 	{#each articles as article (article.slug)}
-		<article class="story-card" data-tone={article.coverTone}>
+		<article class={ui.storyCard} data-tone={article.coverTone}>
 			<p class="section-label">{article.category}</p>
 			<h2>
 				<a href={resolve('/articles/[articleSlug]', { articleSlug: article.slug })}>
@@ -58,7 +66,7 @@
 				</a>
 			</h2>
 			<p>{article.excerpt}</p>
-			<div class="story-meta">
+			<div class={ui.storyMeta}>
 				<span>{article.published}</span>
 				<span>{article.readingTime}</span>
 			</div>

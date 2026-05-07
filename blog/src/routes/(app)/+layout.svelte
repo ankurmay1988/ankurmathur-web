@@ -21,6 +21,27 @@
 		sketch: 'Sketch'
 	};
 
+	const ui = {
+		shell:
+			'theme-shell mx-auto box-border w-full max-w-7xl px-4 pt-4 pb-16 md:pt-6',
+		siteChrome:
+			'site-chrome sticky top-4 z-10 mb-8 flex items-center justify-between gap-4 px-4 py-4 max-md:static max-md:flex-col max-md:items-start',
+		themeControls: 'theme-controls flex flex-wrap items-center gap-4 max-md:w-full max-md:justify-between',
+		themeGroup:
+			'theme-group inline-flex items-center gap-2 p-1 max-md:w-full max-md:justify-center',
+		themeChip: 'theme-chip rounded-full px-4 py-2 max-md:flex-1',
+		modeControls:
+			'mode-controls inline-flex items-center gap-1 p-1 max-md:w-full max-md:justify-center',
+		modeToggle:
+			'mode-toggle relative grid h-11 w-14 place-items-center overflow-hidden rounded-full border border-transparent p-1',
+		modeToggleTrack: 'mode-toggle__track relative block h-full w-full rounded-full',
+		modeToggleThumb:
+			'mode-toggle__thumb absolute top-1/2 left-0.5 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full',
+		systemToggle:
+			'system-toggle grid h-11 w-11 place-items-center rounded-full border border-transparent',
+		siteContent: 'site-content grid gap-8 *:min-w-0'
+	} as const;
+
 	function syncTheme(visualTheme: VisualTheme, colorMode: ColorMode, persist = true) {
 		if (typeof document === 'undefined') {
 			return;
@@ -92,17 +113,21 @@
 
 
 
-<div class="theme-shell">
-	<header class="site-chrome">
+<div class={ui.shell}>
+	<header class={ui.siteChrome}>
 		<a class="brand-mark" href={resolve('/')}>Ankur Mathur</a>
 
-		<div class="theme-controls" aria-label="Theme controls">
-			<div class="theme-group" role="group" aria-label="Visual theme">
+		<div class={ui.themeControls} aria-label="Theme controls">
+			<div
+				class={ui.themeGroup}
+				role="group"
+				aria-label="Visual theme"
+			>
 				{#each visualThemes as theme (theme)}
 					<button
 						type="button"
 						class:active={themeState.visualTheme === theme}
-						class="theme-chip"
+						class={ui.themeChip}
 						onclick={() => applyTheme(theme, themeState.colorMode)}
 					>
 						{themeLabels[theme]}
@@ -110,10 +135,10 @@
 				{/each}
 			</div>
 
-			<div class="mode-controls">
+			<div class={ui.modeControls}>
 				<button
 					type="button"
-					class="mode-toggle"
+					class={ui.modeToggle}
 					class:active={themeState.colorMode !== 'system'}
 					class:is-dark={themeState.effectiveMode === 'dark'}
 					onclick={toggleColorMode}
@@ -125,8 +150,8 @@
 						? 'Switch to light mode'
 						: 'Switch to dark mode'}
 				>
-					<span class="mode-toggle__track" aria-hidden="true">
-						<span class="mode-toggle__thumb">
+					<span class={ui.modeToggleTrack} aria-hidden="true">
+						<span class={ui.modeToggleThumb}>
 							{#if themeState.effectiveMode === 'dark'}
 								<svg viewBox="0 0 24 24" aria-hidden="true">
 									<path
@@ -146,7 +171,7 @@
 
 				<button
 					type="button"
-					class="system-toggle"
+					class={ui.systemToggle}
 					class:active={themeState.colorMode === 'system'}
 					onclick={setSystemMode}
 					aria-pressed={themeState.colorMode === 'system'}
@@ -163,7 +188,7 @@
 		</div>
 	</header>
 
-	<main class="site-content">
+	<main class={ui.siteContent}>
 		{@render children()}
 	</main>
 </div>

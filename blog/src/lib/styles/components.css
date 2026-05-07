@@ -9,24 +9,9 @@
 
 /* ── Layout shell ─────────────────────────────────────────────── */
 
-.theme-shell {
-	width: min(calc(100% - 2rem), var(--page-max));
-	margin: 0 auto;
-	padding: 1.25rem 0 4rem;
-}
-
 /* ── Navigation / site chrome ─────────────────────────────────── */
 
 .site-chrome {
-	position: sticky;
-	top: 0.8rem;
-	z-index: 10;
-	display: flex;
-	justify-content: space-between;
-	gap: 1rem;
-	align-items: center;
-	padding: 0.95rem 1.1rem;
-	margin-bottom: 2.2rem;
 	backdrop-filter: blur(18px);
 	background: var(--surface);
 	border: 1px solid var(--border);
@@ -43,19 +28,8 @@
 
 /* ── Theme controls ───────────────────────────────────────────── */
 
-.theme-controls {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.85rem;
-	align-items: center;
-}
-
 .theme-group,
 .mode-controls {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.45rem;
-	padding: 0.28rem;
 	border: 1px solid var(--border);
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
@@ -75,8 +49,6 @@
 }
 
 .theme-chip {
-	padding: 0.58rem 0.9rem;
-	border-radius: 999px;
 	font-size: 0.84rem;
 	font-weight: 600;
 	letter-spacing: 0.04em;
@@ -95,52 +67,24 @@
 	color: var(--bg);
 }
 
-.mode-controls {
-	gap: 0.4rem;
-}
-
 .mode-toggle,
 .system-toggle {
-	display: grid;
-	place-items: center;
-	width: 2.65rem;
-	height: 2.65rem;
-	border-radius: 999px;
-	border: 1px solid transparent;
 	background: color-mix(in srgb, var(--accent-soft) 78%, transparent);
 	color: var(--text);
 }
 
 .mode-toggle {
-	position: relative;
-	overflow: hidden;
-	padding: 0.2rem;
-	width: 3.45rem;
 	background: color-mix(in srgb, var(--accent-soft) 64%, var(--surface-strong));
 }
 
 .mode-toggle__track {
-	position: relative;
-	display: block;
-	width: 100%;
-	height: 100%;
-	border-radius: 999px;
 	background: transparent;
 }
 
 .mode-toggle__thumb {
-	position: absolute;
-	top: 50%;
-	left: 0.14rem;
-	display: grid;
-	place-items: center;
-	width: 1.8rem;
-	height: 1.8rem;
-	border-radius: 999px;
 	background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
 	color: var(--text);
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 72%, transparent);
-	transform: translate3d(0, -50%, 0);
 	transition:
 		transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
 		background-color 180ms ease,
@@ -198,11 +142,6 @@
 
 /* ── Page content grid ────────────────────────────────────────── */
 
-.site-content {
-	display: grid;
-	gap: 2rem;
-}
-
 .eyebrow,
 .section-label {
 	margin: 0;
@@ -227,12 +166,7 @@
 /* ── Home hero ────────────────────────────────────────────────── */
 
 .home-hero {
-	padding: clamp(1.6rem, 4vw, 3.6rem);
 	border-radius: calc(var(--radius) + 0.5rem);
-	min-height: 20rem;
-	display: grid;
-	align-content: end;
-	gap: 1.15rem;
 	background:
 		linear-gradient(
 			135deg,
@@ -268,11 +202,6 @@
 /* ── Featured story ───────────────────────────────────────────── */
 
 .featured-story {
-	display: grid;
-	grid-template-columns: minmax(0, 2.3fr) minmax(15rem, 1fr);
-	gap: 1.6rem;
-	padding: 1.6rem;
-	border-radius: var(--radius);
 }
 
 .featured-story h2,
@@ -293,18 +222,9 @@
 /* ── Story grid ───────────────────────────────────────────────── */
 
 .story-grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 1.25rem;
 }
 
 .story-card {
-	padding: 1.45rem;
-	border-radius: var(--radius);
-	min-height: 18rem;
-	display: grid;
-	align-content: start;
-	gap: 0.95rem;
 	background:
 		linear-gradient(
 			180deg,
@@ -326,36 +246,18 @@
 
 .story-meta,
 .article-meta {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem 1rem;
-	font-size: 0.9rem;
 	color: var(--muted);
 }
 
 /* ── Article shell ────────────────────────────────────────────── */
 
-.article-shell {
-	padding: clamp(1.4rem, 4vw, 3rem);
-	border-radius: calc(var(--radius) + 0.35rem);
-	max-width: min(100%, 58rem);
-	margin-inline: auto;
-	display: grid;
-	gap: 1.4rem;
-}
-
 .back-link {
-	width: fit-content;
 	text-decoration: none;
 	color: var(--muted);
 }
 
 .article-header {
-	display: grid;
-	gap: 0.75rem;
-	padding-bottom: 1.1rem;
-	border-bottom: 1px solid var(--border);
-	max-width: min(100%, 98ch);
+	max-width: 100%;
 }
 
 .article-header h1 {
@@ -371,11 +273,7 @@
 /* ── Article prose ────────────────────────────────────────────── */
 
 .article-prose {
-	max-width: 100%;
-	width: 100%;
 	font-family: var(--font-serif);
-	font-size: 1.15rem;
-	line-height: 1.8;
 	color: var(--text);
 	--tw-prose-body: var(--text);
 	--tw-prose-headings: var(--text);
