@@ -1,0 +1,159 @@
+{
+	"template": "default",
+	"basics": {
+		"name": "Ankur Mathur",
+		"headline": "Full-Stack Developer | Polyglot Developer (C#, JS/TS, Golang, Rust, Python) | Microservices Architect | Reverse Engineering (Assembly x86/x64, CLR)",
+		"email": "ankurakaet@gmail.com",
+		"phone": "+91 9887863958",
+		"location": "Greater Jaipur Area, Rajasthan, India",
+		"photo": "/images/profile.svg",
+		"summary": ".NET, C#/JavaScript Developer skilled in Angular, BackboneJS, MS SQL Server, and modern full-stack architectures with expertise in microservices, Kubernetes, and cloud infrastructure.",
+		"socialLinks": [
+			{
+				"platform": "linkedin",
+				"url": "https://www.linkedin.com/in/ankur-mathur-07299274/",
+				"label": "LinkedIn"
+			},
+			{ "platform": "github", "url": "https://github.com/ankurmay1988", "label": "GitHub" },
+			{ "platform": "email", "url": "mailto:ankurakaet@gmail.com", "label": "Email" }
+		]
+	},
+	"experience": [
+		{
+			"company": "Nagarro",
+			"position": "Staff Software Engineer",
+			"startDate": "2026-01",
+			"endDate": null,
+			"current": true,
+			"location": "Jaipur, Rajasthan, India",
+			"highlights": [
+				"Microservices / Kubernetes DevOps",
+				"Scrum Master (Agile)",
+				"Full Stack: React / Next.js + Postgres + .NET 10 + Kubernetes",
+				"ThreeJS 3D Visualizations and Simulations"
+			]
+		},
+		{
+			"company": "Nagarro",
+			"position": "Associate Technical Lead",
+			"startDate": "2018-11",
+			"endDate": "2026-01",
+			"current": false,
+			"location": "Jaipur, Rajasthan, India",
+			"highlights": [
+				"NodeJS and Angular Applications",
+				"Explored Data Science and Machine Learning",
+				"Heavy use of SPA architecture, Azure cloud infrastructure and Angular/Node",
+				".NET Core for function apps and critical cloud infrastructure",
+				"SQL Server 2016 and Azure SQL as backend"
+			]
+		},
+		{
+			"company": "Nagarro",
+			"position": "Senior Associate Technology",
+			"startDate": "2017-09",
+			"endDate": "2018-10",
+			"current": false,
+			"location": "Jaipur, Rajasthan, India",
+			"highlights": [
+				"Education domain — simulations and smart apps for students aged 8-12",
+				"SPA architecture, Azure cloud infrastructure, Angular/Node",
+				".NET Core for function apps and critical cloud infrastructure",
+				"SQL Server 2016 and Azure SQL as backend"
+			]
+		},
+		{
+			"company": "Nagarro",
+			"position": "Technical Associate",
+			"startDate": "2016-04",
+			"endDate": "2017-09",
+			"current": false,
+			"location": "Jaipur, Rajasthan, India",
+			"highlights": [
+				"Manufacturing domain — Six Sigma quality protocol and SPC software development",
+				"SPA (Single Page Applications) and Azure cloud infrastructure",
+				"Technologies: ASP.NET 4.5, Angular 2, NodeJS, Backbone.JS, D3JS, WebAPI 2, SQL Server 2014"
+			]
+		},
+		{
+			"company": "A3logics",
+			"position": "Software Engineer",
+			"startDate": "2013-08",
+			"endDate": "2016-04",
+			"current": false,
+			"location": "Jaipur, Rajasthan, India",
+			"highlights": [
+				"Health Insurance domain — US Taxation and US Health Insurance policies",
+				"X12 EDI file development (EDI 834, 837)",
+				"HR Management System Software",
+				"Technologies: ASP.NET 4, WebAPI, SQL Server 2012, AngularJS"
+			]
+		},
+		{
+			"company": "Bhandari Foils & Tubes Private Limited",
+			"position": "Software Engineer",
+			"startDate": "2012-05",
+			"endDate": "2013-05",
+			"current": false,
+			"location": "",
+			"highlights": [
+				"Inventory manager for the organization — complete architecture implementation",
+				"Technologies: WPF (C#, XAML, Silverlight), .NET 3.5, WCF"
+			]
+		}
+	],
+	"education": [
+		{
+			"institution": "Rajasthan Technical University, Kota",
+			"degree": "Bachelor of Technology (BTech)",
+			"field": "Information Technology",
+			"startDate": "2007",
+			"endDate": "2011"
+		}
+	],
+	"skills": [
+		{
+			"name": "Languages & Runtimes",
+			"items": ["C#", "JavaScript / TypeScript", "Golang", "Rust", "Python", "SQL"]
+		},
+		{
+			"name": "Frameworks & Libraries",
+			"items": [
+				"ASP.NET Core / .NET",
+				"Angular",
+				"React / Next.js",
+				"Node.js",
+				"Backbone.JS",
+				"WPF / Silverlight",
+				"ThreeJS"
+			]
+		},
+		{
+			"name": "Infrastructure & DevOps",
+			"items": ["Kubernetes", "Docker", "Azure Cloud", "Microservices Architecture"]
+		},
+		{
+			"name": "AI / ML",
+			"items": ["LangGraph", "LangChain", "Data Science & Machine Learning"]
+		},
+		{
+			"name": "Other Expertise",
+			"items": [
+				"System Architecture",
+				"Assembly x86/x64",
+				"CLR Reverse Engineering",
+				"Scrum / Agile",
+				"X12 EDI"
+			]
+		}
+	],
+	"certifications": [
+		{
+			"name": "PGDDS C9 Course 1&2",
+			"issuer": "Post Graduate Diploma in Data Science"
+		}
+	],
+	"projects": [],
+	"languages": [],
+	"interests": []
+}

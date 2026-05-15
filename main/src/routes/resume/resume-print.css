@@ -1,0 +1,259 @@
+/*
+ * ================================================================
+ *  RESUME PRINT CSS (inspired by mnjul/html-resume)
+ *  Used for the /resume print-friendly page.
+ * ================================================================
+ */
+
+@page {
+	size: letter portrait;
+	margin: 0;
+}
+
+.resume-print {
+	box-sizing: border-box;
+	width: 8.5in;
+	height: 11in;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+	line-height: 1.3;
+	color: #444;
+	hyphens: auto;
+	margin: 0 auto;
+}
+
+.resume-print h1,
+.resume-print h2,
+.resume-print h3 {
+	margin: 0;
+	color: #000;
+}
+
+.resume-print li {
+	list-style-type: none;
+}
+
+/* ── Main column ─────────────────────────────────────────────── */
+.resume-print #main {
+	float: left;
+	width: 6.4in;
+	padding: 0.25in 0.25in 0 0.25in;
+	font-size: 7pt;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.resume-print #sidebar {
+	float: right;
+	width: calc(8.5in - 6.4in);
+	height: 100%;
+	padding: 0.6in 0.2in;
+	background-color: #f2f2f2;
+	font-size: 8.5pt;
+}
+
+.resume-print #sidebar h1 {
+	font-weight: 400;
+	font-size: 11pt;
+	text-transform: uppercase;
+}
+
+.resume-print .side-block {
+	margin-top: 0.5in;
+}
+
+.resume-print #contact ul {
+	margin-top: 0.05in;
+	padding-left: 0;
+	font-family: 'Source Code Pro', monospace;
+	font-weight: 400;
+	line-height: 1.75;
+}
+
+.resume-print #contact li > i {
+	width: 9pt;
+	text-align: right;
+}
+
+.resume-print #skills ul {
+	margin: 0.05in 0 0.15in;
+	padding: 0;
+}
+
+.resume-print #skills li {
+	font-family: 'Source Code Pro', monospace;
+	font-weight: 400;
+	font-size: 8pt;
+	line-height: 1.5;
+}
+
+/* ── Title ────────────────────────────────────────────────────── */
+.resume-print #title {
+	position: relative;
+	left: 0.55in;
+	margin-bottom: 0.3in;
+	line-height: 1.2;
+}
+
+.resume-print #title h1 {
+	font-weight: 300;
+	font-size: 18pt;
+	line-height: 1.5;
+	text-transform: uppercase;
+}
+
+.resume-print #title h1 strong {
+	font-weight: 600;
+}
+
+.resume-print .subtitle {
+	font-size: 8pt;
+}
+
+/* ── Main blocks ──────────────────────────────────────────────── */
+.resume-print .main-block {
+	margin-top: 0.1in;
+}
+
+.resume-print #main h2 {
+	position: relative;
+	top: 5pt;
+	left: calc(0.6in + 0.2in);
+	font-weight: 400;
+	font-size: 11pt;
+	color: #555;
+	text-transform: uppercase;
+}
+
+.resume-print #main h2 > i {
+	position: absolute;
+	left: -19pt;
+	top: 1.5pt;
+	z-index: 1;
+	color: #444;
+}
+
+/* ── Blocks layout ────────────────────────────────────────────── */
+.resume-print .blocks {
+	display: flex;
+	flex-flow: row nowrap;
+}
+
+.resume-print .blocks > div {
+	padding-top: 5pt;
+}
+
+.resume-print .date {
+	flex: 0 0 0.6in;
+	padding-top: calc(5pt + 2.5pt);
+	padding-right: 0.2in;
+	font-size: 7pt;
+	text-align: right;
+	line-height: 1;
+}
+
+.resume-print .date span {
+	display: block;
+}
+
+.resume-print .date span:nth-child(2)::before {
+	position: relative;
+	top: 1pt;
+	right: 5.5pt;
+	display: block;
+	height: 10pt;
+	content: '|';
+}
+
+.resume-print .decorator {
+	flex: 0 0 0;
+	position: relative;
+	width: 2pt;
+	min-height: 100%;
+	border-left: 1px solid #ccc;
+}
+
+.resume-print .decorator::before {
+	position: absolute;
+	top: 10px;
+	left: -5.5px;
+	content: ' ';
+	display: block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background-color: #fff;
+}
+
+.resume-print .decorator::after {
+	position: absolute;
+	top: calc(10px + 1px);
+	left: calc(-5.5px + 1px);
+	content: ' ';
+	display: block;
+	width: calc(9px - 2px);
+	height: calc(9px - 2px);
+	border-radius: 50%;
+	background-color: #555;
+}
+
+.resume-print .blocks:last-child .decorator {
+	margin-bottom: 0.25in;
+}
+
+/* ── Details ──────────────────────────────────────────────────── */
+.resume-print .details {
+	flex: 1 0 0;
+	padding-left: 0.2in;
+	padding-top: calc(5pt - 0.5pt);
+}
+
+.resume-print .details header {
+	color: #000;
+}
+
+.resume-print .details h3 {
+	font-size: 9pt;
+}
+
+.resume-print .main-block:not(.concise) .details div {
+	margin: 0.18in 0 0.1in 0;
+}
+
+.resume-print .main-block:not(.concise) .blocks:last-child .details div {
+	margin-bottom: 0;
+}
+
+.resume-print .details .place {
+	float: left;
+	font-size: 7.5pt;
+}
+
+.resume-print .details .location {
+	float: right;
+}
+
+.resume-print .details div {
+	clear: both;
+}
+
+.resume-print #main ul {
+	padding-left: 0.07in;
+	margin: 0.08in 0;
+}
+
+.resume-print #main li {
+	margin: 0 0 0.025in 0;
+}
+
+.resume-print #main li::before {
+	position: relative;
+	margin-left: -4.25pt;
+	content: '• ';
+}
+
+/* ── Print media rules ────────────────────────────────────────── */
+@media print {
+	body { margin: 0; padding: 0; }
+	.resume-print { margin: 0; }
+	.print-controls { display: none !important; }
+}

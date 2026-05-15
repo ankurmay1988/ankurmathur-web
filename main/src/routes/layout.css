@@ -1,3 +1,568 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/*
+ * ================================================================
+ *  RESUME WEBSITE STYLES (StartBootstrap Resume theme)
+ *  Fonts: 'Saira Extra Condensed' (headings), 'Muli' (body)
+ *  Reference: https://startbootstrap.github.io/startbootstrap-resume/
+ * ================================================================
+ */
+
+:root {
+	--sidebar-width: 17rem;
+	--primary: #bd5d38;
+	--primary-dark: #a34d2e;
+	--gray-800: #343a40;
+	--gray-700: #495057;
+	--gray-600: #6c757d;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	color: var(--gray-600);
+	font-family: 'Muli', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ================================================
+   SIDEBAR
+   ================================================ */
+.sidebar-nav {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: var(--sidebar-width);
+	height: 100vh;
+	background: var(--primary);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	z-index: 1000;
+	padding: 1.5rem 1rem;
+	overflow-y: auto;
+}
+
+.sidebar-brand {
+	display: block;
+	text-decoration: none;
+	margin: 0 auto 0.5rem;
+}
+
+.profile-img {
+	width: 10rem;
+	height: 10rem;
+	border-radius: 50%;
+	border: 0.5rem solid rgba(255, 255, 255, 0.2);
+	object-fit: cover;
+	display: block;
+}
+
+/* Sidebar nav links */
+.sidebar-nav-links {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.sidebar-nav-list {
+	list-style: none;
+	padding: 0;
+	margin: auto 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.sidebar-nav-list .nav-item {
+	display: block;
+	width: 100%;
+	text-align: center;
+}
+
+.sidebar-nav-list .nav-link {
+	display: block;
+	padding: 0.4rem 1rem;
+	color: rgba(255, 255, 255, 0.6);
+	text-decoration: none;
+	font-weight: 800;
+	font-size: 0.85rem;
+	letter-spacing: 0.05rem;
+	text-transform: uppercase;
+	transition: color 0.2s;
+}
+
+.sidebar-nav-list .nav-link:hover,
+.sidebar-nav-list .nav-link.active {
+	color: #fff;
+}
+
+.sidebar-cta {
+	width: 100%;
+	padding: 1rem 0 0.5rem;
+	text-align: center;
+}
+
+.download-resume-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 0.75rem;
+	letter-spacing: 0.05rem;
+	text-transform: uppercase;
+	padding: 0.4rem 0.85rem;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 999px;
+	transition: background 0.2s, border-color 0.2s;
+}
+
+.download-resume-link:hover {
+	background: rgba(255, 255, 255, 0.15);
+	border-color: #fff;
+}
+
+.nav-toggler {
+	display: none;
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 0.25rem;
+	padding: 0.25rem 0.75rem;
+	cursor: pointer;
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	z-index: 10;
+}
+
+.navbar-toggler-icon {
+	display: block;
+	width: 1.5em;
+	height: 1.5em;
+	background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center;
+}
+
+/* ================================================
+   MAIN CONTENT
+   ================================================ */
+.resume-main {
+	margin-left: var(--sidebar-width);
+}
+
+.resume-section {
+	display: flex;
+	align-items: center;
+	padding: 5rem 3rem;
+	max-width: 75rem;
+	min-height: 100vh;
+}
+
+.resume-section-content {
+	width: 100%;
+}
+
+/* ================================================
+   ABOUT SECTION
+   ================================================ */
+.resume-name {
+	font-family: 'Saira Extra Condensed', serif;
+	font-weight: 700;
+	font-size: clamp(3.5rem, 10vw, 6rem);
+	text-transform: uppercase;
+	line-height: 1;
+	margin: 0 0 0.5rem;
+	color: var(--gray-800);
+}
+
+.resume-name .text-primary {
+	color: var(--primary);
+}
+
+.subheading {
+	font-family: 'Saira Extra Condensed', serif;
+	text-transform: uppercase;
+	font-weight: 500;
+	font-size: 1.45rem;
+	color: var(--gray-600);
+	margin-bottom: 1rem;
+}
+
+.subheading a {
+	color: var(--primary);
+	text-decoration: none;
+}
+
+.subheading a:hover {
+	text-decoration: underline;
+}
+
+.lead {
+	font-size: 1.15rem;
+	font-weight: 400;
+	color: var(--gray-600);
+	line-height: 1.6;
+}
+
+/* ================================================
+   SOCIAL ICONS (within sections - About section)
+   ================================================ */
+.social-icons {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.social-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.5rem;
+	height: 3.5rem;
+	background-color: var(--gray-700);
+	color: #fff;
+	border-radius: 50%;
+	transition: background-color 0.2s;
+	text-decoration: none;
+}
+
+.social-icon svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	fill: currentColor;
+}
+
+.social-icon:hover {
+	background-color: var(--primary);
+}
+
+/* ================================================
+   SECTION TYPOGRAPHY
+   ================================================ */
+.resume-section h2 {
+	font-family: 'Saira Extra Condensed', serif;
+	font-size: 3.5rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--gray-800);
+	margin: 0 0 3rem;
+	line-height: 1;
+}
+
+.resume-section h3 {
+	font-family: 'Saira Extra Condensed', serif;
+	font-size: 1.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--gray-800);
+	margin: 0 0 0.25rem;
+	line-height: 1.1;
+}
+
+/* ================================================
+   EXPERIENCE / EDUCATION (flex layout)
+   ================================================ */
+.d-flex { display: flex; }
+.flex-column { flex-direction: column; }
+.flex-md-row { flex-direction: column; }
+.justify-content-between { justify-content: space-between; }
+.flex-grow-1 { flex-grow: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+.m-0 { margin: 0; }
+.p-0 { padding: 0; }
+
+.container-fluid {
+	width: 100%;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+/* Section separators */
+hr.m-0 {
+	border: 0;
+	border-top: 1px solid #dee2e6;
+}
+
+.text-primary {
+	color: var(--primary);
+}
+
+/* Date text styling for experience/education */
+.resume-section .flex-shrink-0 {
+	padding-top: 0.25rem;
+}
+
+.resume-section .flex-shrink-0 span,
+.resume-section .flex-shrink-0 .text-primary {
+	font-family: 'Saira Extra Condensed', serif;
+	font-weight: 500;
+	font-size: 1.05rem;
+	text-transform: uppercase;
+	color: var(--primary);
+}
+
+/* ================================================
+   BULLET LIST
+   ================================================ */
+.fa-ul {
+	list-style: none;
+	padding-left: 0;
+	margin: 0.5rem 0 0;
+}
+
+.fa-ul li {
+	position: relative;
+	padding-left: 1.5rem;
+	margin-bottom: 0.35rem;
+	color: var(--gray-600);
+	line-height: 1.6;
+}
+
+.fa-li {
+	position: absolute;
+	left: 0;
+	top: 0.55rem;
+}
+
+.bullet-dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--primary);
+}
+
+/* ================================================
+   SKILLS
+   ================================================ */
+.resume-section .subheading.mb-2 {
+	margin-bottom: 0.75rem;
+	font-size: 1.15rem;
+	color: var(--gray-700);
+}
+
+.list-inline {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.list-inline-item {
+	display: inline-block;
+}
+
+.skill-pill {
+	display: inline-block;
+	padding: 0.35rem 1rem;
+	background: rgba(189, 93, 56, 0.1);
+	color: var(--primary-dark);
+	border: 1px solid rgba(189, 93, 56, 0.25);
+	border-radius: 999px;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+/* ================================================
+   CONTACT FORM
+   ================================================ */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.6rem 1.5rem;
+	border: none;
+	border-radius: 0.25rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s;
+	text-decoration: none;
+}
+
+.btn-primary {
+	background: var(--primary);
+	color: #fff;
+}
+
+.btn-primary:hover {
+	background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.contact-form {
+	max-width: 36rem;
+}
+
+.form-group {
+	margin-bottom: 1.25rem;
+}
+
+.form-label {
+	display: block;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+	font-size: 0.9rem;
+	color: var(--gray-800);
+}
+
+.required {
+	color: var(--primary);
+}
+
+.form-input {
+	width: 100%;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 0.25rem;
+	font-size: 0.95rem;
+	font-family: inherit;
+	transition: border-color 0.2s;
+	box-sizing: border-box;
+}
+
+.form-input:focus {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px rgba(189, 93, 56, 0.15);
+}
+
+.form-textarea {
+	resize: vertical;
+	min-height: 6rem;
+}
+
+.alert {
+	padding: 0.75rem 1rem;
+	border-radius: 0.25rem;
+	margin-bottom: 1.25rem;
+	font-size: 0.9rem;
+}
+
+.alert-success {
+	background: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+	background: #f8d7da;
+	color: #721c24;
+	border: 1px solid #f5c6cb;
+}
+
+/* ================================================
+   RESPONSIVE: < 992px (tablet/mobile)
+   ================================================ */
+@media (max-width: 991.98px) {
+	.sidebar-nav {
+		width: 100%;
+		height: auto;
+		position: relative;
+		flex-direction: row;
+		flex-wrap: wrap;
+		padding: 0.6rem 1rem;
+		justify-content: flex-start;
+	}
+
+	.sidebar-brand {
+		margin: 0;
+	}
+
+	.profile-img {
+		width: 2.8rem;
+		height: 2.8rem;
+		border-width: 3px;
+	}
+
+	.sidebar-nav-links {
+		display: none;
+		width: 100%;
+		margin-top: 0.5rem;
+	}
+
+	.nav-open .sidebar-nav-links {
+		display: block;
+	}
+
+	.nav-toggler {
+		display: block;
+	}
+
+	.sidebar-cta {
+		display: none;
+	}
+
+	.resume-main {
+		margin-left: 0;
+	}
+
+	.resume-section {
+		padding: 3rem 1.25rem;
+		min-height: auto;
+	}
+
+	.resume-section h2 {
+		font-size: 2.5rem;
+	}
+
+	.resume-section h3 {
+		font-size: 1.5rem;
+	}
+
+	.resume-name {
+		font-size: clamp(2.5rem, 12vw, 4rem);
+	}
+
+	.subheading {
+		font-size: 1.15rem;
+	}
+
+	.d-flex.flex-md-row {
+		flex-direction: column !important;
+	}
+
+	.resume-section .flex-shrink-0 {
+		padding-top: 0.5rem;
+	}
+}
+
+/* ================================================
+   RESPONSIVE: >= 992px (desktop)
+   ================================================ */
+@media (min-width: 992px) {
+	body {
+		padding-left: var(--sidebar-width);
+	}
+
+	.resume-main {
+		margin-left: 0;
+	}
+
+	.d-flex.flex-md-row {
+		flex-direction: row !important;
+	}
+
+	.d-flex.flex-md-row > .flex-shrink-0 {
+		padding-left: 1.5rem;
+		text-align: right;
+		min-width: 10rem;
+	}
+}

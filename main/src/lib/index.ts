@@ -1,1 +1,2 @@
-// place files you want to import through the `$lib` alias in this folder.
+export { type ResumeData, type Basics, type SocialLink, type Experience, type Education, type SkillCategory, type Certification, type Project } from './types/resume';
+export { default as resumeData } from './data/resume.json' with { type: 'json' };
