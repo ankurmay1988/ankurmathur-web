@@ -8,12 +8,19 @@
 	}
 
 	let { article, href }: Props = $props();
+
+	function resolveImage(url: string): string {
+		if (url.startsWith('http://') || url.startsWith('https://')) {
+			return url;
+		}
+		return resolve(url);
+	}
 </script>
 
 <a {href} class="mini-card">
 	<figure class="mini-card__image">
 		<img
-			src={resolve(article.image)}
+			src={resolveImage(article.image)}
 			alt={article.imageAlt}
 			loading="lazy"
 			decoding="async"

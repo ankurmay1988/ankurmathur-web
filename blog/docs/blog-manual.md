@@ -24,7 +24,7 @@ The most important files are:
 - `src/routes/+layout.svelte`: minimal root layout — anti-FOUC IIFE, Google Fonts links, favicon only
 - `src/routes/(app)/+layout.svelte`: full blog shell — nav, theme switcher, theme persistence, imports CSS
 - `src/lib/styles/layout.css`: CSS entry point that imports all theme files, base, components, and responsive CSS
-- `src/lib/styles/themes/`: one CSS file per visual theme (`paper.css`, `journal.css`, `mono.css`, `romantic.css`, `sketch.css`)
+- `src/lib/styles/themes/`: one CSS file per visual theme (`paper.css`, `mono.css`, `sketch.css`)
 - `src/lib/styles/components.css`: all shared component classes (`.card`, `.btn`, `.btn-primary`, `.btn-ghost`, `.tag`, `.field`, `.skeleton`, `.empty-state`, `.divider`, etc.)
 - `src/lib/styles/base.css`: html/body resets, selection, links
 - `src/lib/styles/responsive.css`: all `@media` breakpoints (theme-agnostic)
@@ -158,6 +158,27 @@ Links to article pages are created with SvelteKit's `resolve('/articles/[article
 
 This split keeps route validation separate from rendering.
 
+### Image URL Handling
+
+Article metadata can use **external URLs** (e.g., Unsplash) for `image` and `heroImage`. Because SvelteKit's `resolve()` from `$app/paths` only works with internal pathnames, all components that display article images use a `resolveImage()` helper:
+
+```ts
+function resolveImage(url: string): string {
+	if (url.startsWith('http://') || url.startsWith('https://')) {
+		return url;
+	}
+	return resolve(url);
+}
+```
+
+This helper is defined in:
+- `FeaturedCard.svelte`
+- `MiniCard.svelte`
+- `StoryCard.svelte`
+- `[articleSlug]/+page.svelte`
+
+If you create a new component that renders `article.image` or `article.heroImage`, always use this pattern — passing an external URL directly to `resolve()` will crash the page with a 500 error at runtime.
+
 ## How Article Files Should Be Written
 
 Articles currently live in `src/lib/content/articles/` and are written as `.svx` files.
@@ -173,6 +194,10 @@ The current pattern looks like this:
     readingTime: '5 min read',
     category: 'Notes',
     featured: false,
+    image: '/images/articles/default-card-coder.svg',
+    imageAlt: 'Short visual description',
+    heroImage: '/images/articles/default-hero-coder.svg',
+    heroImageAlt: 'Wide hero visual description',
     coverAlt: 'Short visual description',
     coverTone: 'amber'
   };
@@ -197,7 +222,11 @@ Use these fields consistently:
 - `readingTime`
 - `category`
 - `featured`
-- `coverAlt`
+- `image` — card thumbnail URL (can be external or local)
+- `imageAlt` — alt text for the card thumbnail
+- `heroImage` — wide hero image URL for the article page (falls back to `image`)
+- `heroImageAlt` — alt text for the hero image (falls back to `imageAlt`)
+- `coverAlt` — legacy alias for `imageAlt`
 - `coverTone`
 
 If you omit a field, `src/lib/articles.ts` will fill in fallbacks for several of them, but it is better to set them explicitly.
@@ -225,9 +254,10 @@ Use this checklist whenever you add a new post:
 5. Use a valid date string for `published` so sorting and date formatting work correctly.
 6. Set `featured: true` only if you want the article to become the homepage featured story.
 7. Keep the excerpt short enough to work in homepage cards.
-8. Verify the article slug matches the intended URL.
-9. Preview the article page and homepage card after saving.
-10. Check code fences, headings, lists, and tables in both light and dark modes if the post uses them.
+8. Set `image` and `heroImage` to either external URLs (e.g., Unsplash) or local paths under `/images/articles/`.
+9. Verify the article slug matches the intended URL.
+10. Preview the article page and homepage card after saving.
+11. Check code fences, headings, lists, and tables in both light and dark modes if the post uses them.
 
 ### Authoring Tips
 
@@ -264,15 +294,13 @@ src/lib/styles/
   responsive.css      ← @media breakpoints (theme-agnostic)
   themes/
     paper.css         ← default :root + html.dark[data-theme='paper']
-    journal.css
     mono.css
-    romantic.css
     sketch.css
 ```
 
 ### Theme Tokens
 
-Five visual themes are available: `paper`, `journal`, `mono`, `romantic`, `sketch`.
+Three visual themes are available: `paper` (default), `mono`, and `sketch`.
 
 Each theme CSS file defines two blocks:
 
@@ -292,15 +320,24 @@ Available classes:
 
 | Class | Role |
 |---|---|
-| `.card` | Generic surface panel |
-| `.btn` | Button base (combine with modifier) |
-| `.btn-primary` | Filled accent button |
-| `.btn-ghost` | Outline/transparent button |
-| `.tag` | Pill label / badge |
-| `.field` / `.field-label` / `.field-input` / `.field-error` | Form field stack |
-| `.skeleton` | Shimmer loading placeholder |
-| `.empty-state` / `__icon` / `__title` / `__body` | Empty state layout |
-| `.divider` | Horizontal rule |
+| `.site-chrome` | Top navigation bar |
+| `.brand-mark` | Site title link in nav |
+| `.theme-chip` | Visual theme selector button |
+| `.mode-toggle` | Light/dark mode switch with sliding thumb |
+| `.system-toggle` | System color mode button |
+| `.featured-card` | Large featured article card |
+| `.mini-card` | Compact landscape article card |
+| `.story-card` | Grid article card |
+| `.card-tag` / `.card-tag--on-image` | Category pill badge |
+| `.card-meta` / `.card-meta__dot` / `.card-meta--light` | Date + reading time row |
+| `.section-header` / `.section-header__label` | Section header with decorative line |
+| `.landing-hero` | Homepage featured + top posts grid |
+| `.article-shell` | Article page container |
+| `.article-header` / `.article-dek` / `.article-meta` | Article metadata display |
+| `.article-prose` | Article body prose wrapper |
+| `.back-link` | "Back to all writing" link |
+| `.eyebrow` / `.section-label` | Small uppercase accent label |
+| `.home-hero` / `.hero-copy` | Homepage hero section |
 
 ### Shell And Layout Styles
 
@@ -331,7 +368,7 @@ Important details:
 
 - mdsvex processes `.svx` and `.md`
 - Shiki uses `github-light` and `github-dark`
-- supported languages currently include `typescript`, `javascript`, `css`, `html`, `svelte`, `bash`, `json`, and `markdown`
+- supported languages currently include `typescript`, `javascript`, `css`, `html`, `svelte`, `bash`, `json`, `markdown`, `csharp`, `sql`, and `yaml`
 - notation transformers are enabled for diff, focus, and highlight patterns
 
 Because the highlighted HTML is generated during preprocessing, article code blocks render as themed HTML rather than raw plain text.
@@ -386,7 +423,7 @@ That means the selected visual theme and mode survive page reloads.
 
 The header has two theme control groups:
 
-- visual theme buttons for `paper`, `journal`, `mono`, `romantic`, and `sketch`
+- visual theme buttons for `paper`, `mono`, and `sketch`
 - mode controls for explicit light or dark switching and returning to system mode
 
 The dark-mode toggle is a sliding thumb control. Its visual position follows the effective light or dark state.
@@ -546,6 +583,8 @@ These are useful during maintenance:
 - `pnpm check` can currently surface type issues from generated `.svelte-kit/output/server/index.js`
 - `pnpm lint` can be noisy if generated `.svelte-kit` output is included
 - `pnpm exec vite build` can fail at the Cloudflare adapter cleanup step if `.svelte-kit/cloudflare` is locked by a running dev server
+- **Never pass an external URL to SvelteKit's `resolve()` function.** It only accepts internal pathnames and route IDs. Article images often use external URLs (e.g., Unsplash), so always use the `resolveImage()` helper (defined in card components and the article page) which detects external URLs automatically.
+- When adding article metadata with `image` or `heroImage` fields, be aware that the Shiki highlighter's language list in `svelte.config.js` must include every language used in article code blocks — otherwise the build will fail with "Language X not found".
 
 Those issues are about generated output and local dev state, not the source architecture described above.
 

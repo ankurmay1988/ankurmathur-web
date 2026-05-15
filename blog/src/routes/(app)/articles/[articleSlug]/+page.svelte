@@ -9,6 +9,13 @@
 	let articleRecord = $derived(getArticleBySlug(slug));
 	let ArticleComponent = $derived(articleRecord?.component ?? null);
 
+	function resolveImage(url: string): string {
+		if (url.startsWith('http://') || url.startsWith('https://')) {
+			return url;
+		}
+		return resolve(url);
+	}
+
 	const ui = {
 		articleShell:
 			'article-shell mx-auto flex w-full min-w-0 flex-col gap-6 rounded-3xl px-4 py-6 md:px-8 md:py-10',
@@ -38,7 +45,7 @@
 		</div>
 		<figure class={ui.articleHero}>
 			<img
-				src={resolve(data.article.heroImage)}
+				src={resolveImage(data.article.heroImage)}
 				alt={data.article.heroImageAlt}
 				loading="eager"
 				decoding="async"

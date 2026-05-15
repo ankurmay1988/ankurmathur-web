@@ -96,9 +96,9 @@
 			return () => mediaQuery.removeEventListener('change', handleThemeChange);
 		}
 
-		mediaQuery.addListener(handleThemeChange);
+		mediaQuery.addEventListener('change', handleThemeChange);
 
-		return () => mediaQuery.removeListener(handleThemeChange);
+		return () => mediaQuery.removeEventListener('change', handleThemeChange);
 	});
 </script>
 
