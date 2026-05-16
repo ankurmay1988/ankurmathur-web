@@ -85,6 +85,7 @@
 			<section class="main-block concise">
 				<h2><i class="fa fa-certificate"></i> Certifications</h2>
 				<section class="blocks">
+					<div class="date"></div>
 					<div class="decorator"></div>
 					<div class="details">
 						<ul>
