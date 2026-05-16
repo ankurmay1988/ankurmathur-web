@@ -1,13 +1,32 @@
 /*
  * ================================================================
- *  RESUME PRINT CSS (inspired by mnjul/html-resume)
- *  Used for the /resume print-friendly page.
+ *  RESUME PRINT CSS (mnjul/html-resume design)
+ *  Reference: https://github.com/mnjul/html-resume
  * ================================================================
  */
 
 @page {
 	size: letter portrait;
 	margin: 0;
+}
+
+:root {
+	--main-width: 5.6in;
+	--sidebar-width: calc(8.5in - var(--main-width));
+	--date-block-width: 0.6in;
+	--decorator-horizontal-margin: 0.2in;
+	--main-blocks-title-icon-offset-left: -19pt;
+}
+
+body {
+	font-family: 'Open Sans', sans-serif !important;
+	font-weight: 300 !important;
+	line-height: 1.3 !important;
+	color: #444 !important;
+	background-color: #fff;
+	padding: 0 !important;
+	margin: 0 auto;
+	width: 8.5in;
 }
 
 .resume-print {
@@ -36,7 +55,7 @@
 /* ── Main column ─────────────────────────────────────────────── */
 .resume-print #main {
 	float: left;
-	width: 6.4in;
+	width: var(--main-width);
 	padding: 0.25in 0.25in 0 0.25in;
 	font-size: 7pt;
 }
@@ -44,7 +63,8 @@
 /* ── Sidebar ─────────────────────────────────────────────────── */
 .resume-print #sidebar {
 	float: right;
-	width: calc(8.5in - 6.4in);
+	position: relative;
+	width: var(--sidebar-width);
 	height: 100%;
 	padding: 0.6in 0.2in;
 	background-color: #f2f2f2;
@@ -63,15 +83,21 @@
 
 .resume-print #contact ul {
 	margin-top: 0.05in;
+	margin-bottom: 1em;
 	padding-left: 0;
 	font-family: 'Source Code Pro', monospace;
 	font-weight: 400;
 	line-height: 1.75;
+	overflow-wrap: break-word;
 }
 
 .resume-print #contact li > i {
 	width: 9pt;
 	text-align: right;
+}
+
+.resume-print #skills {
+	line-height: 1.5;
 }
 
 .resume-print #skills ul {
@@ -80,10 +106,9 @@
 }
 
 .resume-print #skills li {
-	font-family: 'Source Code Pro', monospace;
-	font-weight: 400;
-	font-size: 8pt;
-	line-height: 1.5;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+	font-size: 8.5pt;
 }
 
 /* ── Title ────────────────────────────────────────────────────── */
@@ -92,13 +117,13 @@
 	left: 0.55in;
 	margin-bottom: 0.3in;
 	line-height: 1.2;
+	text-transform: uppercase;
 }
 
 .resume-print #title h1 {
 	font-weight: 300;
 	font-size: 18pt;
 	line-height: 1.5;
-	text-transform: uppercase;
 }
 
 .resume-print #title h1 strong {
@@ -117,7 +142,7 @@
 .resume-print #main h2 {
 	position: relative;
 	top: 5pt;
-	left: calc(0.6in + 0.2in);
+	left: calc(var(--date-block-width) + var(--decorator-horizontal-margin));
 	font-weight: 400;
 	font-size: 11pt;
 	color: #555;
@@ -126,10 +151,38 @@
 
 .resume-print #main h2 > i {
 	position: absolute;
-	left: -19pt;
+	left: var(--main-blocks-title-icon-offset-left);
 	top: 1.5pt;
 	z-index: 1;
 	color: #444;
+}
+
+/* Decorator line extending under h2 */
+.resume-print #main h2::after {
+	height: calc(5pt * 2);
+	position: relative;
+	top: calc(-1 * 5pt);
+	left: calc(-1 * var(--decorator-horizontal-margin));
+	display: block;
+	border-left: 1px solid #ccc;
+	z-index: 0;
+	line-height: 0;
+	font-size: 0;
+	content: ' ';
+}
+
+/* Icon-specific adjustments */
+.resume-print #main h2 > .fa-graduation-cap {
+	left: calc(var(--main-blocks-title-icon-offset-left) - 2pt);
+	top: 2pt;
+}
+
+.resume-print #main h2 > .fa-suitcase {
+	top: 1pt;
+}
+
+.resume-print #main h2 > .fa-folder-open {
+	top: 1.5pt;
 }
 
 /* ── Blocks layout ────────────────────────────────────────────── */
@@ -143,9 +196,9 @@
 }
 
 .resume-print .date {
-	flex: 0 0 0.6in;
-	padding-top: calc(5pt + 2.5pt);
-	padding-right: 0.2in;
+	flex: 0 0 var(--date-block-width);
+	padding-top: calc(5pt + 2.5pt) !important;
+	padding-right: var(--decorator-horizontal-margin);
 	font-size: 7pt;
 	text-align: right;
 	line-height: 1;
@@ -203,8 +256,8 @@
 /* ── Details ──────────────────────────────────────────────────── */
 .resume-print .details {
 	flex: 1 0 0;
-	padding-left: 0.2in;
-	padding-top: calc(5pt - 0.5pt);
+	padding-left: var(--decorator-horizontal-margin);
+	padding-top: calc(5pt - 0.5pt) !important;
 }
 
 .resume-print .details header {
@@ -213,6 +266,7 @@
 
 .resume-print .details h3 {
 	font-size: 9pt;
+	font-weight: 700;
 }
 
 .resume-print .main-block:not(.concise) .details div {
@@ -223,6 +277,10 @@
 	margin-bottom: 0;
 }
 
+.resume-print .main-block.concise .details div:not(.concise) {
+	padding: 0.05in 0 0.07in 0;
+}
+
 .resume-print .details .place {
 	float: left;
 	font-size: 7.5pt;
@@ -230,6 +288,18 @@
 
 .resume-print .details .location {
 	float: right;
+}
+
+.resume-print .details .location::before {
+	display: inline-block;
+	position: relative;
+	right: 3pt;
+	top: 0.25pt;
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	content: "\f041";
 }
 
 .resume-print .details div {
@@ -249,6 +319,26 @@
 	position: relative;
 	margin-left: -4.25pt;
 	content: '• ';
+}
+
+/* ── Disclaimer ───────────────────────────────────────────────── */
+.resume-print #disclaimer {
+	position: absolute;
+	bottom: 0.2in;
+	right: 0.2in;
+	font-size: 7.5pt;
+	font-style: italic;
+	line-height: 1.1;
+	text-align: right;
+	color: #777;
+	max-width: calc(var(--sidebar-width) - 0.4in);
+}
+
+.resume-print #disclaimer code {
+	color: #666;
+	font-family: 'Source Code Pro', monospace;
+	font-weight: 400;
+	font-style: normal;
 }
 
 /* ── Print media rules ────────────────────────────────────────── */

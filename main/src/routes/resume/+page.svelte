@@ -9,6 +9,10 @@
 <svelte:head>
 	<title>{data.basics.name} — CV / Resume (Print)</title>
 	<meta name="description" content="Printable resume for {data.basics.name}" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Source+Code+Pro:wght@400&display=swap" rel="stylesheet" />
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 </svelte:head>
 
 <div class="print-controls">

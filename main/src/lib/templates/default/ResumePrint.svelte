@@ -16,6 +16,13 @@
 		}
 		return year;
 	}
+
+	function displayUrl(url: string): string {
+		let cleaned = url.replace(/^https?:\/\//, '').replace(/^mailto:/, '').replace(/\/$/, '');
+		// Remove www. prefix
+		cleaned = cleaned.replace(/^www\./, '');
+		return cleaned;
+	}
 </script>
 
 <div class="resume-print">
@@ -42,11 +49,13 @@
 								<span class="location">{exp.location}</span>
 							{/if}
 						</header>
-						<ul>
-							{#each exp.highlights as h}
-								<li>{h}</li>
-							{/each}
-						</ul>
+						<div>
+							<ul>
+								{#each exp.highlights as h}
+									<li>{h}</li>
+								{/each}
+							</ul>
+						</div>
 					</div>
 				</section>
 			{/each}
@@ -97,7 +106,7 @@
 				<li><i class="fa fa-phone"></i> {data.basics.phone}</li>
 				<li><i class="fa fa-globe"></i> {data.basics.location}</li>
 				{#each data.basics.socialLinks as link}
-					<li><i class="fa fa-{link.platform === 'github' ? 'github' : link.platform === 'linkedin' ? 'linkedin' : 'link'}"></i> {link.url.replace(/^https?:\/\//, '')}</li>
+					<li><i class="fa fa-{link.platform === 'github' ? 'github' : link.platform === 'linkedin' ? 'linkedin' : 'envelope'}"></i> {displayUrl(link.url)}</li>
 				{/each}
 			</ul>
 		</div>
@@ -110,6 +119,9 @@
 					{/each}
 				</ul>
 			{/each}
+		</div>
+		<div class="side-block" id="disclaimer">
+			This r&eacute;sum&eacute; was wholly typeset with HTML/CSS &mdash; see <code>git.io/vVSYL</code>
 		</div>
 	</aside>
 </div>
