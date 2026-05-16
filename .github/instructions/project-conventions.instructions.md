@@ -10,6 +10,35 @@ description: "Use when writing or editing Svelte components, SvelteKit routes, C
 - Both deployed to **Cloudflare Workers** via `@sveltejs/adapter-cloudflare`
 - Package manager is **pnpm**; run commands from within each app's directory
 
+## Development & Deployment Workflow
+
+### Dev Server
+
+```bash
+# From the app directory (main/ or blog/)
+pnpm run dev --host
+```
+
+- The dev server locks the `.svelte-kit/cloudflare` directory — **kill it before building or deploying**
+- If port 5173 is busy, Vite auto-selects the next available port (5174, 5175, etc.)
+- Cloudflare bindings (`platform.env.*`) are **not available** during `vite dev` — always use optional chaining (`platform?.env`)
+- Always test changes on the dev server before building or deploying
+
+### Building
+
+```bash
+pnpm run build   # runs svelte-kit sync → wrangler types → vite build
+```
+
+Build fails if the dev server is running (`.svelte-kit/cloudflare` lock).
+
+### Deployment (GitOps)
+
+- Deployment is handled automatically via GitOps pipeline (GitHub Actions) — **commits trigger auto-deploy**
+- Do **not** run `wrangler deploy` manually unless explicitly asked
+- Always ask for user consent before deploying manually
+- The user commits their own changes
+
 ## Svelte 5 Runes Mode (mandatory)
 
 Runes mode is **forced** for all non-library files via `svelte.config.js`. Always use runes syntax — never the legacy options API.
