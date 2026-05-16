@@ -14,11 +14,11 @@
 			{basics.name.split(' ').slice(0, -1).join(' ')}
 			<span class="text-primary">{basics.name.split(' ').pop()}</span>
 		</h1>
-		<div class="subheading mb-3">
+		<div class="subheading mb-5">
 			{basics.location} · <a href="tel:{basics.phone}">{basics.phone}</a> ·
 			<a href="mailto:{basics.email}">{basics.email}</a>
 		</div>
-		<p class="lead mb-4">{basics.headline}</p>
+		<p class="lead mb-5">{basics.headline}</p>
 		<p class="mb-5">{basics.summary}</p>
 		<div class="social-icons">
 			{#each basics.socialLinks as link (link.url)}

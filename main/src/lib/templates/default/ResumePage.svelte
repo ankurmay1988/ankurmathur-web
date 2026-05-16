@@ -12,7 +12,89 @@
 	}
 
 	let { data }: Props = $props();
+
+	// Scroll-spy: highlight nav links on scroll
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+
+		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.sidebar-nav-list .nav-link');
+		const sections: { id: string; el: HTMLElement }[] = [];
+		navLinks.forEach((link) => {
+			const href = link.getAttribute('href');
+			if (href && href.startsWith('#')) {
+				const el = document.getElementById(href.substring(1));
+				if (el) sections.push({ id: href.substring(1), el });
+			}
+		});
+
+		function onScroll() {
+			const scrollPos = window.scrollY;
+			const viewportHeight = window.innerHeight;
+			// Bootstrap-style: section is "active" when its top passes ~40% into viewport
+			const activationPoint = scrollPos + viewportHeight * 0.4;
+
+			let current = sections[0]?.id || '';
+
+			// If near the bottom, activate the last section
+			const lastSection = sections[sections.length - 1];
+			if (lastSection && scrollPos + viewportHeight >= document.body.scrollHeight - 2) {
+				current = lastSection.id;
+			} else {
+				for (const section of sections) {
+					const offsetTop = section.el.offsetTop;
+					if (offsetTop <= activationPoint) {
+						current = section.id;
+					} else {
+						break;
+					}
+				}
+			}
+
+			navLinks.forEach((link) => {
+				const href = link.getAttribute('href');
+				if (href === `#${current}`) {
+					link.classList.add('active');
+				} else {
+					link.classList.remove('active');
+				}
+			});
+		}
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		// Also run on resize since viewport height changes
+		window.addEventListener('resize', onScroll, { passive: true });
+		// Run after a tick to account for scroll restoration
+		requestAnimationFrame(() => onScroll());
+		setTimeout(onScroll, 100);
+
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('resize', onScroll);
+		};
+	});
+
+	// Smooth scroll on nav click + collapse mobile menu
+	function handleNavClick(e: MouseEvent) {
+		const link = e.currentTarget as HTMLAnchorElement;
+		const href = link.getAttribute('href');
+		if (href && href.startsWith('#')) {
+			e.preventDefault();
+			const target = document.getElementById(href.substring(1));
+			if (target) {
+				target.scrollIntoView({ behavior: 'smooth' });
+			}
+		}
+		// Collapse mobile nav
+		const nav = document.getElementById('sideNav');
+		if (nav) nav.classList.remove('nav-open');
+	}
 </script>
+
+<svelte:head>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:500,700&family=Muli:400,400i,800,800i&display=swap" rel="stylesheet" />
+</svelte:head>
 
 <div class="resume-wrapper">
 	<!-- Sidebar Navigation (StartBootstrap style) -->
@@ -30,14 +112,14 @@
 		</a>
 		<div class="sidebar-nav-links">
 			<ul class="sidebar-nav-list">
-				<li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-				<li class="nav-item"><a class="nav-link" href="#experience">Experience</a></li>
-				<li class="nav-item"><a class="nav-link" href="#education">Education</a></li>
-				<li class="nav-item"><a class="nav-link" href="#skills">Skills</a></li>
+				<li class="nav-item"><a class="nav-link" href="#about" onclick={handleNavClick}>About</a></li>
+				<li class="nav-item"><a class="nav-link" href="#experience" onclick={handleNavClick}>Experience</a></li>
+				<li class="nav-item"><a class="nav-link" href="#education" onclick={handleNavClick}>Education</a></li>
+				<li class="nav-item"><a class="nav-link" href="#skills" onclick={handleNavClick}>Skills</a></li>
 				{#if data.interests.length > 0}
-					<li class="nav-item"><a class="nav-link" href="#interests">Interests</a></li>
+					<li class="nav-item"><a class="nav-link" href="#interests" onclick={handleNavClick}>Interests</a></li>
 				{/if}
-				<li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+				<li class="nav-item"><a class="nav-link" href="#contact" onclick={handleNavClick}>Contact</a></li>
 			</ul>
 			<div class="sidebar-cta">
 				<a href="/resume" class="download-resume-link">

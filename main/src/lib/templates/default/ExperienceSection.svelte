@@ -31,7 +31,9 @@
 					<ul class="fa-ul">
 						{#each exp.highlights as highlight}
 							<li>
-								<span class="fa-li"><span class="bullet-dot"></span></span>
+								<span class="fa-li">
+									<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="check-icon"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+								</span>
 								{highlight}
 							</li>
 						{/each}
